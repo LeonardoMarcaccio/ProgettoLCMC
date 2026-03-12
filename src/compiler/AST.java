@@ -1,8 +1,14 @@
 package compiler;
 
 import java.util.*;
+
 import compiler.lib.*;
 
+import javax.swing.text.html.Option;
+
+/**
+ * Class that implements all the possible nodes that compose the Abstract Syntax Tree
+ */
 public class AST {
 	
 	public static class ProgLetInNode extends Node {
@@ -24,7 +30,10 @@ public class AST {
 		@Override
 		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {return visitor.visitNode(this);}
 	}
-	
+
+    /**
+     * Function Node
+     */
 	public static class FunNode extends DecNode {
 		final String id;
 		final TypeNode retType;
@@ -45,6 +54,9 @@ public class AST {
 		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {return visitor.visitNode(this);}
 	}
 
+    /**
+     * Function Parameter Node
+     */
 	public static class ParNode extends DecNode {
 		final String id;
 		ParNode(String i, TypeNode t) {id = i; type = t;}
@@ -52,7 +64,10 @@ public class AST {
 		@Override
 		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {return visitor.visitNode(this);}
 	}
-	
+
+    /**
+     * Variable Node
+     */
 	public static class VarNode extends DecNode {
 		final String id;
 		final Node exp;
@@ -61,7 +76,10 @@ public class AST {
 		@Override
 		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {return visitor.visitNode(this);}
 	}
-		
+
+    /**
+     * Screen Output Node
+     */
 	public static class PrintNode extends Node {
 		final Node exp;
 		PrintNode(Node e) {exp = e;}
@@ -69,7 +87,10 @@ public class AST {
 		@Override
 		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {return visitor.visitNode(this);}
 	}
-	
+
+    /**
+     * If-Then-Else Statement Node
+     */
 	public static class IfNode extends Node {
 		final Node cond;
 		final Node th;
@@ -79,7 +100,10 @@ public class AST {
 		@Override
 		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {return visitor.visitNode(this);}
 	}
-	
+
+    /**
+     * Equal Evaluation Node
+     */
 	public static class EqualNode extends Node {
 		final Node left;
 		final Node right;
@@ -88,7 +112,10 @@ public class AST {
 		@Override
 		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {return visitor.visitNode(this);}
 	}
-	
+
+    /**
+     * Multiplication Node
+     */
 	public static class TimesNode extends Node {
 		final Node left;
 		final Node right;
@@ -97,7 +124,10 @@ public class AST {
 		@Override
 		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {return visitor.visitNode(this);}
 	}
-	
+
+    /**
+     * Sum Node
+     */
 	public static class PlusNode extends Node {
 		final Node left;
 		final Node right;
@@ -106,7 +136,10 @@ public class AST {
 		@Override
 		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {return visitor.visitNode(this);}
 	}
-	
+
+    /**
+     * Call a specific Function Node
+     */
 	public static class CallNode extends Node {
 		final String id;
 		final List<Node> arglist;
@@ -120,7 +153,10 @@ public class AST {
 		@Override
 		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {return visitor.visitNode(this);}
 	}
-	
+
+    /**
+     * Call a Variable Node
+     */
 	public static class IdNode extends Node {
 		final String id;
 		STentry entry;
@@ -130,7 +166,10 @@ public class AST {
 		@Override
 		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {return visitor.visitNode(this);}
 	}
-	
+
+    /**
+     * Boolean Type Value Node
+     */
 	public static class BoolNode extends Node {
 		final Boolean val;
 		BoolNode(boolean n) {val = n;}
@@ -138,7 +177,10 @@ public class AST {
 		@Override
 		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {return visitor.visitNode(this);}
 	}
-	
+
+	/**
+	 * Integer Type Value Node
+	 */
 	public static class IntNode extends Node {
 		final Integer val;
 		IntNode(Integer n) {val = n;}
@@ -160,15 +202,130 @@ public class AST {
 	}
 	
 	public static class BoolTypeNode extends TypeNode {
-
 		@Override
 		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {return visitor.visitNode(this);}
 	}
 
 	public static class IntTypeNode extends TypeNode {
-
 		@Override
 		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {return visitor.visitNode(this);}
 	}
 
+    /**
+     * >= Operator Node
+     */
+	public static class GreaterEqualNode extends TypeNode {
+		final Node left;
+		final Node right;
+
+		GreaterEqualNode(Node left, Node right) {
+			this.left = left;
+			this.right = right;
+		}
+
+		@Override
+		public <S, E extends Exception> S accept(BaseASTVisitor<S, E> visitor) throws  E {
+			return visitor.visitNode(this);
+		}
+	}
+
+	/**
+	 * <= Operator Node
+	 */
+	public static class LessEqualNode extends TypeNode {
+		final Node left;
+		final Node right;
+
+		LessEqualNode(Node left, Node right) {
+			this.left = left;
+			this.right = right;
+		}
+
+		@Override
+		public <S, E extends Exception> S accept(BaseASTVisitor<S, E> visitor) throws  E {
+			return visitor.visitNode(this);
+		}
+	}
+
+	/**
+	 * Negate Operator Node
+	 */
+	public static class NotNode extends TypeNode {
+		final Node expression;
+		NotNode(Node expression) {
+			this.expression = expression;
+		}
+		@Override
+		public <S, E extends  Exception> S accept(BaseASTVisitor<S, E> visitor) throws  E {return visitor.visitNode(this);}
+	}
+
+    /**
+     * Minus Operation or Negative Integer Node
+     */
+	public static class MinusNode extends TypeNode {
+		// TODO: Understand what scenario should you control the operation or the
+		final Optional<Node> left;
+		final Node right;
+
+		MinusNode(Node left, Node right) {
+			this.left = Optional.of(left);
+			this.right = right;
+		}
+
+		MinusNode(Node right) {
+			this.left = Optional.empty();
+			this.right = right;
+		}
+
+		@Override
+		public <S, E extends  Exception> S accept(BaseASTVisitor<S, E> visitor) throws  E {return visitor.visitNode(this);}
+	}
+
+	/**
+	 * Or Logical Operation Node
+	 */
+	public static class OrNode extends TypeNode {
+		final Node left;
+		final Node right;
+
+		OrNode(Node left, Node right) {
+			this.left = left;
+			this.right = right;
+		}
+
+		@Override
+		public <S, E extends  Exception> S accept(BaseASTVisitor<S, E> visitor) throws  E {return visitor.visitNode(this);}
+	}
+
+	/**
+	 * Division Operation Node
+	 */
+	public static class DivNode extends TypeNode {
+		final Node left;
+		final Node right;
+
+		DivNode(Node left, Node right) {
+			this.left = left;
+			this.right = right;
+		}
+
+		@Override
+		public <S, E extends  Exception> S accept(BaseASTVisitor<S, E> visitor) throws  E {return visitor.visitNode(this);}
+	}
+
+	/**
+	 * And Logic Operation Node
+	 */
+	public static class AndNode extends TypeNode {
+		final Node left;
+		final Node right;
+
+		AndNode(Node left, Node right) {
+			this.left = left;
+			this.right = right;
+		}
+
+		@Override
+		public <S, E extends  Exception> S accept(BaseASTVisitor<S, E> visitor) throws  E {return visitor.visitNode(this);}
+	}
 }

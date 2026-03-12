@@ -19,7 +19,7 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 		int j = nestingLevel;
 		STentry entry = null;
 		while (j >= 0 && entry == null) 
-			entry = symTable.get(j--).get(id);	
+			entry = symTable.get(j--).get(id);
 		return entry;
 	}
 
@@ -166,6 +166,54 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 	@Override
 	public Void visitNode(IntNode n) {
 		if (print) printNode(n, n.val.toString());
+		return null;
+	}
+
+	public Void visitNode(GreaterEqualNode greaterEqualNode) {
+		if (print) printNode(greaterEqualNode);
+		visit(greaterEqualNode.left);
+		visit(greaterEqualNode.right);
+		return null;
+	}
+
+	public Void visitNode(LessEqualNode lessEqualNode) {
+		if (print) printNode(lessEqualNode);
+		visit(lessEqualNode.left);
+		visit(lessEqualNode.right);
+		return null;
+	}
+
+	public Void visitNode(NotNode notNode) {
+		if (print) printNode(notNode);
+		visit(notNode.expression);
+		return null;
+	}
+
+	public Void visitNode(MinusNode minusNode) {
+		if (print) printNode(minusNode);
+        minusNode.left.ifPresent(this::visit);
+		visit(minusNode.right);
+		return null;
+	}
+
+	public Void visitNode(OrNode orNode) {
+		if (print) printNode(orNode);
+		visit(orNode.left);
+		visit(orNode.right);
+		return null;
+	}
+
+	public Void visitNode(DivNode dovNode) {
+		if (print) printNode(dovNode);
+		visit(dovNode.left);
+		visit(dovNode.right);
+		return null;
+	}
+
+	public Void visitNode(AndNode andNode) {
+		if (print) printNode(andNode);
+		visit(andNode.left);
+		visit(andNode.right);
 		return null;
 	}
 }

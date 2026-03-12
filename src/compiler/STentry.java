@@ -2,6 +2,9 @@ package compiler;
 
 import compiler.lib.*;
 
+/**
+ * Symbol Table Entry Class
+ */
 public class STentry implements Visitable {
 	final int nl;
 	final TypeNode type;
