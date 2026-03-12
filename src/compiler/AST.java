@@ -10,7 +10,10 @@ import javax.swing.text.html.Option;
  * Class that implements all the possible nodes that compose the Abstract Syntax Tree
  */
 public class AST {
-	
+
+	/**
+	 * Program with Declarations Node
+	 */
 	public static class ProgLetInNode extends Node {
 		final List<DecNode> declist;
 		final Node exp;
@@ -23,6 +26,9 @@ public class AST {
 		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {return visitor.visitNode(this);}
 	}
 
+	/**
+	 * Program without Declarations Node
+	 */
 	public static class ProgNode extends Node {
 		final Node exp;
 		ProgNode(Node e) {exp = e;}
@@ -264,16 +270,11 @@ public class AST {
      */
 	public static class MinusNode extends TypeNode {
 		// TODO: Understand what scenario should you control the operation or the
-		final Optional<Node> left;
+		final Node left;
 		final Node right;
 
 		MinusNode(Node left, Node right) {
-			this.left = Optional.of(left);
-			this.right = right;
-		}
-
-		MinusNode(Node right) {
-			this.left = Optional.empty();
+			this.left = left;
 			this.right = right;
 		}
 

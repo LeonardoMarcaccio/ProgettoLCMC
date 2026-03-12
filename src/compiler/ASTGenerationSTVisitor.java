@@ -8,8 +8,12 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import compiler.AST.*;
 import compiler.FOOLParser.*;
 import compiler.lib.*;
+
 import static compiler.lib.FOOLlib.*;
 
+/**
+ * Generates the structure for the AST
+ */
 public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
 
 	String indent;
@@ -57,27 +61,54 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
 	}
 
 	@Override
-	public Node visitTimesDiv(TimesDivContext c) {
-		if (print) printVarAndProdName(c);
-		Node n = new TimesNode(visit(c.exp(0)), visit(c.exp(1)));
-		n.setLine(c.TIMES().getSymbol().getLine());		// setLine added
-        return n;		
+	public Node visitTimesDiv(TimesDivContext context) {
+		if (print) printVarAndProdName(context);
+		Node left = visit(context.exp(0));
+		Node right = visit(context.exp(1));
+		Node node;
+		if (context.TIMES() != null) {
+			node = new TimesNode(left, right);
+			node.setLine(context.TIMES().getSymbol().getLine());
+		} else {
+			node = new DivNode(left, right);
+			node.setLine(context.DIV().getSymbol().getLine());
+		}
+        return node;
 	}
 
 	@Override
-	public Node visitPlusMinus(PlusMinusContext c) {
-		if (print) printVarAndProdName(c);
-		Node n = new PlusNode(visit(c.exp(0)), visit(c.exp(1)));
-		n.setLine(c.PLUS().getSymbol().getLine());	
-        return n;		
+	public Node visitPlusMinus(PlusMinusContext context) {
+		if (print) printVarAndProdName(context);
+		Node left = visit(context.exp(0));
+		Node right = visit(context.exp(1));
+		Node node;
+		if (context.PLUS() != null) {
+			node = new PlusNode(left, right);
+			node.setLine(context.PLUS().getSymbol().getLine());
+		} else {
+			node = new MinusNode(left, right);
+			node.setLine(context.MINUS().getSymbol().getLine());
+		}
+        return node;
 	}
 
 	@Override
-	public Node visitComp(CompContext c) {
-		if (print) printVarAndProdName(c);
-		Node n = new EqualNode(visit(c.exp(0)), visit(c.exp(1)));
-		n.setLine(c.EQ().getSymbol().getLine());		
-        return n;		
+	public Node visitComp(CompContext context) {
+		if (print) printVarAndProdName(context);
+		Node left = visit(context.exp(0));
+		Node right = visit(context.exp(1));
+		Node node;
+		if (context.EQ() != null) {
+			node = new EqualNode(left, right);
+			node.setLine(context.EQ().getSymbol().getLine());
+		} else if (context.GE() != null) {
+			node = new GreaterEqualNode(left, right);
+			node.setLine(context.GE().getSymbol().getLine());
+		} else {
+			node = new LessEqualNode(left, right);
+			node.setLine(context.LE().getSymbol().getLine());
+		}
+        return node;
 	}
 
 	@Override
@@ -179,6 +210,30 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
 		for (ExpContext arg : c.exp()) arglist.add(visit(arg));
 		Node n = new CallNode(c.ID().getText(), arglist);
 		n.setLine(c.ID().getSymbol().getLine());
+		return n;
+	}
+
+	@Override
+	public Node visitAndOr(AndOrContext context) {
+		if (print) printVarAndProdName(context);
+		Node left = visit(context.exp(0));
+		Node right = visit(context.exp(1));
+		Node node;
+		if (context.AND() != null) {
+			node = new PlusNode(left, right);
+			node.setLine(context.AND().getSymbol().getLine());
+		} else {
+			node = new MinusNode(left, right);
+			node.setLine(context.OR().getSymbol().getLine());
+		}
+		return node;
+	}
+
+	@Override
+	public Node visitNot(NotContext context) {
+		if (print) printVarAndProdName(context);
+		Node n = new NotNode(visit(context.exp()));
+		n.setLine(context.NOT().getSymbol().getLine());
 		return n;
 	}
 }

@@ -6,7 +6,8 @@ import compiler.exc.*;
 import compiler.lib.*;
 
 public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
-	
+
+	// TODO: Segnati questa cosa negli appunti
 	private List<Map<String, STentry>> symTable = new ArrayList<>();
 	private int nestingLevel=0; // current nesting level
 	private int decOffset=-2; // counter for offset of local declarations at current nesting level 
@@ -191,7 +192,7 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 
 	public Void visitNode(MinusNode minusNode) {
 		if (print) printNode(minusNode);
-        minusNode.left.ifPresent(this::visit);
+        visit(minusNode.left);
 		visit(minusNode.right);
 		return null;
 	}
