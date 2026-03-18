@@ -192,7 +192,7 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 
 	public Void visitNode(MinusNode minusNode) {
 		if (print) printNode(minusNode);
-        visit(minusNode.left);
+		visit(minusNode.left);
 		visit(minusNode.right);
 		return null;
 	}

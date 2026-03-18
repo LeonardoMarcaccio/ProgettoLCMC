@@ -1,0 +1,8 @@
+let
+  var x:int = 15 / 3;
+  fun greaterThanTen:bool (val:int)
+    val >= 10;
+in
+  print(
+    !greaterThanTen(x)
+  );

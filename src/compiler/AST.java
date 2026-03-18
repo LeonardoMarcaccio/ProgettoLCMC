@@ -37,9 +37,9 @@ public class AST {
 		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {return visitor.visitNode(this);}
 	}
 
-    /**
-     * Function Node
-     */
+	/**
+	 * Function Node
+	 */
 	public static class FunNode extends DecNode {
 		final String id;
 		final TypeNode retType;
@@ -60,9 +60,9 @@ public class AST {
 		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {return visitor.visitNode(this);}
 	}
 
-    /**
-     * Function Parameter Node
-     */
+	/**
+	 * Function Parameter Node
+	 */
 	public static class ParNode extends DecNode {
 		final String id;
 		ParNode(String i, TypeNode t) {id = i; type = t;}
@@ -71,9 +71,9 @@ public class AST {
 		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {return visitor.visitNode(this);}
 	}
 
-    /**
-     * Variable Node
-     */
+	/**
+	 * Variable Node
+	 */
 	public static class VarNode extends DecNode {
 		final String id;
 		final Node exp;
@@ -83,9 +83,9 @@ public class AST {
 		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {return visitor.visitNode(this);}
 	}
 
-    /**
-     * Screen Output Node
-     */
+	/**
+	 * Screen Output Node
+	 */
 	public static class PrintNode extends Node {
 		final Node exp;
 		PrintNode(Node e) {exp = e;}
@@ -94,9 +94,9 @@ public class AST {
 		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {return visitor.visitNode(this);}
 	}
 
-    /**
-     * If-Then-Else Statement Node
-     */
+	/**
+	 * If-Then-Else Statement Node
+	 */
 	public static class IfNode extends Node {
 		final Node cond;
 		final Node th;
@@ -107,9 +107,9 @@ public class AST {
 		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {return visitor.visitNode(this);}
 	}
 
-    /**
-     * Equal Evaluation Node
-     */
+	/**
+	 * Equal Evaluation Node
+	 */
 	public static class EqualNode extends Node {
 		final Node left;
 		final Node right;
@@ -119,9 +119,9 @@ public class AST {
 		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {return visitor.visitNode(this);}
 	}
 
-    /**
-     * Multiplication Node
-     */
+	/**
+	 * Multiplication Node
+	 */
 	public static class TimesNode extends Node {
 		final Node left;
 		final Node right;
@@ -131,9 +131,9 @@ public class AST {
 		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {return visitor.visitNode(this);}
 	}
 
-    /**
-     * Sum Node
-     */
+	/**
+	 * Sum Node
+	 */
 	public static class PlusNode extends Node {
 		final Node left;
 		final Node right;
@@ -143,9 +143,9 @@ public class AST {
 		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {return visitor.visitNode(this);}
 	}
 
-    /**
-     * Call a specific Function Node
-     */
+	/**
+	 * Call a specific Function Node
+	 */
 	public static class CallNode extends Node {
 		final String id;
 		final List<Node> arglist;
@@ -160,9 +160,9 @@ public class AST {
 		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {return visitor.visitNode(this);}
 	}
 
-    /**
-     * Call a Variable Node
-     */
+	/**
+	 * Call a Variable Node
+	 */
 	public static class IdNode extends Node {
 		final String id;
 		STentry entry;
@@ -173,9 +173,9 @@ public class AST {
 		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {return visitor.visitNode(this);}
 	}
 
-    /**
-     * Boolean Type Value Node
-     */
+	/**
+	 * Boolean Type Value Node
+	 */
 	public static class BoolNode extends Node {
 		final Boolean val;
 		BoolNode(boolean n) {val = n;}
@@ -217,9 +217,9 @@ public class AST {
 		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {return visitor.visitNode(this);}
 	}
 
-    /**
-     * >= Operator Node
-     */
+	/**
+	 * >= Operator Node
+	 */
 	public static class GreaterEqualNode extends TypeNode {
 		final Node left;
 		final Node right;
@@ -265,9 +265,9 @@ public class AST {
 		public <S, E extends  Exception> S accept(BaseASTVisitor<S, E> visitor) throws  E {return visitor.visitNode(this);}
 	}
 
-    /**
-     * Minus Operation or Negative Integer Node
-     */
+	/**
+	 * Minus Operation or Negative Integer Node
+	 */
 	public static class MinusNode extends TypeNode {
 		// TODO: Understand what scenario should you control the operation or the
 		final Node left;

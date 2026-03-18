@@ -32,12 +32,14 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
         
     @Override
 	public Node visit(ParseTree t) {
-    	if (t==null) return null;
-        String temp=indent;
-        indent=(indent==null)?"":indent+"  ";
-        Node result = super.visit(t);
-        indent=temp;
-        return result; 
+		if (t==null) {
+			return null;
+		}
+			String temp=indent;
+			indent=(indent==null)?"":indent+"  ";
+			Node result = super.visit(t);
+			indent=temp;
+			return result;
 	}
 
 	@Override
@@ -134,7 +136,7 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
 		List<DecNode> decList = new ArrayList<>();
 		for (DecContext dec : c.dec()) decList.add((DecNode) visit(dec));
 		Node n = null;
-		if (c.ID().size()>0) { //non-incomplete ST
+		if (!c.ID().isEmpty()) { //non-incomplete ST
 			n = new FunNode(c.ID(0).getText(),(TypeNode)visit(c.type(0)),parList,decList,visit(c.exp()));
 			n.setLine(c.FUN().getSymbol().getLine());
 		}

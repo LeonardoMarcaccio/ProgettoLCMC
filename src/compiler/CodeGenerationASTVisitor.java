@@ -7,8 +7,8 @@ import static compiler.lib.FOOLlib.*;
 
 public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidException> {
 
-  CodeGenerationASTVisitor() {}
-  CodeGenerationASTVisitor(boolean debug) {super(false,debug);} //enables print for debugging
+	CodeGenerationASTVisitor() {}
+	CodeGenerationASTVisitor(boolean debug) {super(false,debug);} //enables print for debugging
 
 	@Override
 	public String visitNode(ProgLetInNode n) {
@@ -16,8 +16,8 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 		String declCode = null;
 		for (Node dec : n.declist) declCode=nlJoin(declCode,visit(dec));
 		return nlJoin(
-			"push 0",	
-			declCode, // generate code for declarations (allocation)			
+			"push 0",
+			declCode, // generate code for declarations (allocation)
 			visit(n.exp),
 			"halt",
 			getCode()
@@ -58,10 +58,10 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 				"sfp", // set $fp to popped value (Control Link)
 				"ltm", // load $tm value (function result)
 				"lra", // load $ra value
-				"js"  // jump to to popped address
+				"js"  // jump to popped address
 			)
 		);
-		return "push "+funl;		
+		return "push "+funl;
 	}
 
 	@Override
@@ -81,9 +81,11 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 
 	@Override
 	public String visitNode(IfNode n) {
-		if (print) printNode(n);
+		if (print) {
+			printNode(n);
+		}
 	 	String l1 = freshLabel();
-	 	String l2 = freshLabel();		
+	 	String l2 = freshLabel();
 		return nlJoin(
 			visit(n.cond),
 			"push 1",
@@ -98,7 +100,9 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 
 	@Override
 	public String visitNode(EqualNode n) {
-		if (print) printNode(n);
+		if (print) {
+			printNode(n);
+		}
 	 	String l1 = freshLabel();
 	 	String l2 = freshLabel();
 		return nlJoin(
@@ -120,7 +124,7 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 			visit(n.left),
 			visit(n.right),
 			"mult"
-		);	
+		);
 	}
 
 	@Override
@@ -129,7 +133,7 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 		return nlJoin(
 			visit(n.left),
 			visit(n.right),
-			"add"				
+			"add"
 		);
 	}
 
@@ -176,5 +180,132 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 	public String visitNode(IntNode n) {
 		if (print) printNode(n,n.val.toString());
 		return "push "+n.val;
+	}
+
+	@Override
+	public String visitNode(GreaterEqualNode n) {
+		if (print) {
+			printNode(n);
+		}
+		String l1 = freshLabel();
+		String l2 = freshLabel();
+		return nlJoin(
+			visit(n.right),
+			visit(n.left),
+			"bleq " + l1,
+			"push 0",
+			"b " + l2,
+			l1 + ":",
+			"push 1",
+			l2 + ":"
+		);
+	}
+
+	@Override
+	public String visitNode(LessEqualNode n) {
+		if (print) {
+			printNode(n);
+		}
+		String l1 = freshLabel();
+		String l2 = freshLabel();
+		return nlJoin(
+			visit(n.left),
+			visit(n.right),
+			"bleq " + l1,
+			"push 0",
+			"b " + l2,
+			l1 + ":",
+			"push 1",
+			l2 + ":"
+		);
+	}
+
+	@Override
+	public String visitNode(NotNode n) {
+		if (print) {
+			printNode(n);
+		}
+		String l1 = freshLabel();
+		String l2 = freshLabel();
+		return nlJoin(
+			visit(n.expression),   // valuta espressione
+			"push 1",
+			"beq " + l1,    // se exp == 1 → vai a l1
+			"push 1",       // caso exp == 0 → risultato = 1
+			"b " + l2,
+			l1 + ":",
+			"push 0",       // caso exp == 1 → risultato = 0
+			l2 + ":"
+		);
+	}
+
+	@Override
+	public String visitNode(MinusNode n) {
+		if (print) {
+			printNode(n);
+		}
+		return nlJoin(
+			visit(n.left),
+			visit(n.right),
+			"sub"
+		);
+	}
+
+	@Override
+	public String visitNode(OrNode n) {
+		if (print) {
+			printNode(n);
+		}
+		String l1 = freshLabel();
+		String l2 = freshLabel();
+		return nlJoin(
+			visit(n.left),
+			"push 1",
+			"beq " + l1,     // se left == 1 → true
+			visit(n.right),
+			"push 1",
+			"beq " + l1,     // se right == 1 → true
+			"push 0",        // entrambi false
+			"b " + l2,
+			l1 + ":",
+			"push 1",
+			l2 + ":"
+		);
+	}
+
+	@Override
+	public String visitNode(DivNode n) {
+		if (print) printNode(n);
+		return nlJoin(
+			visit(n.left),
+			visit(n.right),
+			"div"
+		);
+	}
+
+	@Override
+	public String visitNode(AndNode n) {
+		if (print) {
+			printNode(n);
+		}
+		String l1 = freshLabel();
+		String l2 = freshLabel();
+		String l3 = freshLabel();
+		return nlJoin(
+			visit(n.left),
+			"push 1",
+			"beq " + l1,
+			"push 0",
+			"b " + l3,
+			l1 + ":",
+			visit(n.right),
+			"push 1",
+			"beq " + l2,
+			"push 0",
+			"b " + l3,
+			l2 + ":",
+			"push 1",
+			l3 + ":"
+		);
 	}
 }
