@@ -1,8 +1,8 @@
 let
-  var x:int = 15 / 3;
-  fun greaterThanTen:bool (val:int)
-    val >= 10;
+  var x:int = (15 - 3)/ 3;
+  fun test:bool (val:int)
+    (val >= 0 && val <= 10) || val == 12;
 in
   print(
-    !greaterThanTen(x)
+    !test(x)
   );

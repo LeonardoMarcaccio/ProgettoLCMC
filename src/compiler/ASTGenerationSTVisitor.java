@@ -222,10 +222,10 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
 		Node right = visit(context.exp(1));
 		Node node;
 		if (context.AND() != null) {
-			node = new PlusNode(left, right);
+			node = new AndNode(left, right);
 			node.setLine(context.AND().getSymbol().getLine());
 		} else {
-			node = new MinusNode(left, right);
+			node = new OrNode(left, right);
 			node.setLine(context.OR().getSymbol().getLine());
 		}
 		return node;

@@ -87,7 +87,7 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 		if (print) printNode(n);
 		TypeNode l = visit(n.left);
 		TypeNode r = visit(n.right);
-		if ( !(isSubtype(l, r) || isSubtype(r, l)) )
+		if (!(isSubtype(l, r) || isSubtype(r, l)))
 			throw new TypeException("Incompatible types in equal",n.getLine());
 		return new BoolTypeNode();
 	}
@@ -95,7 +95,7 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 	@Override
 	public TypeNode visitNode(TimesNode n) throws TypeException {
 		if (print) printNode(n);
-		if ( !(isSubtype(visit(n.left), new IntTypeNode())
+		if (!(isSubtype(visit(n.left), new IntTypeNode())
 				&& isSubtype(visit(n.right), new IntTypeNode())) )
 			throw new TypeException("Non integers in multiplication",n.getLine());
 		return new IntTypeNode();
@@ -104,7 +104,7 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 	@Override
 	public TypeNode visitNode(PlusNode n) throws TypeException {
 		if (print) printNode(n);
-		if ( !(isSubtype(visit(n.left), new IntTypeNode())
+		if (!(isSubtype(visit(n.left), new IntTypeNode())
 				&& isSubtype(visit(n.right), new IntTypeNode())) )
 			throw new TypeException("Non integers in sum",n.getLine());
 		return new IntTypeNode();
@@ -114,13 +114,13 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 	public TypeNode visitNode(CallNode n) throws TypeException {
 		if (print) printNode(n,n.id);
 		TypeNode t = visit(n.entry); 
-		if ( !(t instanceof ArrowTypeNode) )
+		if (!(t instanceof ArrowTypeNode))
 			throw new TypeException("Invocation of a non-function "+n.id,n.getLine());
 		ArrowTypeNode at = (ArrowTypeNode) t;
-		if ( !(at.parlist.size() == n.arglist.size()) )
+		if (!(at.parlist.size() == n.arglist.size()))
 			throw new TypeException("Wrong number of parameters in the invocation of "+n.id,n.getLine());
 		for (int i = 0; i < n.arglist.size(); i++)
-			if ( !(isSubtype(visit(n.arglist.get(i)),at.parlist.get(i))) )
+			if (!(isSubtype(visit(n.arglist.get(i)),at.parlist.get(i))))
 				throw new TypeException("Wrong type for "+(i+1)+"-th parameter in the invocation of "+n.id,n.getLine());
 		return at.ret;
 	}
