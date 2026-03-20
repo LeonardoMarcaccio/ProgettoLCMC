@@ -4,8 +4,6 @@ import java.util.*;
 
 import compiler.lib.*;
 
-import javax.swing.text.html.Option;
-
 /**
  * Class that implements all the possible nodes that compose the Abstract Syntax Tree
  */
@@ -47,12 +45,12 @@ public class AST {
 		final List<DecNode> declist; 
 		final Node exp;
 		FunNode(String i, TypeNode rt, List<ParNode> pl, List<DecNode> dl, Node e) {
-	    	id=i; 
-	    	retType=rt; 
-	    	parlist=Collections.unmodifiableList(pl); 
-	    	declist=Collections.unmodifiableList(dl); 
-	    	exp=e;
-	    }
+			id=i;
+			retType=rt;
+			parlist=Collections.unmodifiableList(pl);
+			declist=Collections.unmodifiableList(dl);
+			exp=e;
+		}
 		
 		//void setType(TypeNode t) {type = t;}
 		
@@ -222,7 +220,7 @@ public class AST {
 	/**
 	 * >= Operator Node
 	 */
-	public static class GreaterEqualNode extends TypeNode {
+	public static class GreaterEqualNode extends Node {
 		final Node left;
 		final Node right;
 
@@ -240,7 +238,7 @@ public class AST {
 	/**
 	 * <= Operator Node
 	 */
-	public static class LessEqualNode extends TypeNode {
+	public static class LessEqualNode extends Node {
 		final Node left;
 		final Node right;
 
@@ -258,7 +256,7 @@ public class AST {
 	/**
 	 * Negate Operator Node
 	 */
-	public static class NotNode extends TypeNode {
+	public static class NotNode extends Node {
 		final Node expression;
 		NotNode(Node expression) {
 			this.expression = expression;
@@ -270,7 +268,7 @@ public class AST {
 	/**
 	 * Minus Operation or Negative Integer Node
 	 */
-	public static class MinusNode extends TypeNode {
+	public static class MinusNode extends Node {
 		// TODO: Understand what scenario should you control the operation or the
 		final Node left;
 		final Node right;
@@ -287,7 +285,7 @@ public class AST {
 	/**
 	 * Or Logical Operation Node
 	 */
-	public static class OrNode extends TypeNode {
+	public static class OrNode extends Node {
 		final Node left;
 		final Node right;
 
@@ -303,7 +301,7 @@ public class AST {
 	/**
 	 * Division Operation Node
 	 */
-	public static class DivNode extends TypeNode {
+	public static class DivNode extends Node {
 		final Node left;
 		final Node right;
 
@@ -319,7 +317,7 @@ public class AST {
 	/**
 	 * And Logic Operation Node
 	 */
-	public static class AndNode extends TypeNode {
+	public static class AndNode extends Node {
 		final Node left;
 		final Node right;
 
@@ -334,6 +332,112 @@ public class AST {
 
 	/* ------------------ Object Oriented ------------------ */
 
+	/**
+	 * Class Node
+	 */
+	public static class ClassNode extends DecNode {
+		final String className;
+		final List<FieldNode> fieldList;
+		final List<MethodNode> methodList;
 
+		ClassNode(
+			String className,
+			List<FieldNode> fieldList,
+			List<MethodNode> methodList
+		) {
+			this.className = className;
+			this.fieldList = Collections.unmodifiableList(fieldList);
+			this.methodList = Collections.unmodifiableList(methodList);
+		}
 
+		//void setType(TypeNode t) {type = t;}
+
+		@Override
+		public <S, E extends Exception> S accept(BaseASTVisitor<S, E> visitor) throws E {
+			return visitor.visitNode(this);
+		}
+	}
+
+	public static class FieldNode extends DecNode {
+		final String name;
+		final TypeNode type;
+
+		FieldNode(String name, TypeNode type) {
+			this.name = name;
+			this.type = type;
+		}
+
+		@Override
+		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {
+			return visitor.visitNode(this);
+		}
+	}
+
+	public static class MethodNode extends DecNode {
+		final String name;
+		final TypeNode retType;
+		final List<ParNode> parList;
+		final List<DecNode> decList;
+		final Node exp;
+
+		MethodNode(
+			String name,
+			TypeNode retType,
+			List<ParNode> parList,
+			List<DecNode> decList,
+			Node exp
+		) {
+			this.name = name;
+			this.retType = retType;
+			this.parList = Collections.unmodifiableList(parList);
+			this.decList = Collections.unmodifiableList(decList);
+			this.exp = exp;
+		}
+
+		@Override
+		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {
+			return visitor.visitNode(this);
+		}
+	}
+
+	public static class ClassCallNode extends Node {
+		final String objId;      // nome oggetto
+		final String methodId;   // nome metodo
+		final List<Node> argList;
+
+		ClassCallNode(String objId, String methodId, List<Node> argList) {
+			this.objId = objId;
+			this.methodId = methodId;
+			this.argList = Collections.unmodifiableList(argList);
+		}
+
+		@Override
+		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {
+			return visitor.visitNode(this);
+		}
+	}
+
+	public static class NewNode extends Node {
+		final String classId;
+		final List<Node> argList;
+
+		NewNode(String classId, List<Node> argList) {
+			this.classId = classId;
+			this.argList = Collections.unmodifiableList(argList);
+		}
+
+		@Override
+		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {
+			return visitor.visitNode(this);
+		}
+	}
+
+	public static class EmptyNode extends Node {
+		EmptyNode() {}
+
+		@Override
+		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {
+			return visitor.visitNode(this);
+		}
+	}
 }

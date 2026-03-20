@@ -30,7 +30,7 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
     	System.out.println(indent+prefix+lowerizeFirstChar(extractCtxName(ctxClass.getName())));                               	
     }
         
-    @Override
+	@Override
 	public Node visit(ParseTree t) {
 		if (t==null) {
 			return null;
@@ -121,12 +121,14 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
 			n = new VarNode(c.ID().getText(), (TypeNode) visit(c.type()), visit(c.exp()));
 			n.setLine(c.VAR().getSymbol().getLine());
 		}
-        return n;
+			return n;
 	}
 
 	@Override
 	public Node visitFundec(FundecContext c) {
-		if (print) printVarAndProdName(c);
+		if (print) {
+			printVarAndProdName(c);
+		}
 		List<ParNode> parList = new ArrayList<>();
 		for (int i = 1; i < c.ID().size(); i++) { 
 			ParNode p = new ParNode(c.ID(i).getText(),(TypeNode) visit(c.type(i)));
@@ -140,7 +142,7 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
 			n = new FunNode(c.ID(0).getText(),(TypeNode)visit(c.type(0)),parList,decList,visit(c.exp()));
 			n.setLine(c.FUN().getSymbol().getLine());
 		}
-        return n;
+		return n;
 	}
 
 	@Override
@@ -237,5 +239,91 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
 		Node n = new NotNode(visit(context.exp()));
 		n.setLine(context.NOT().getSymbol().getLine());
 		return n;
+	}
+
+	@Override
+	public Node visitCldec(CldecContext context) {
+		if (print) {
+			printVarAndProdName(context);
+		}
+
+		/*
+		 * Create the List of FieldNode by getting the i-th ID(Name of the argument)
+		 * and visiting its corresponding TypeNode
+		 */
+		List<FieldNode> fieldList = new ArrayList<>();
+		for (int i = 1; i < context.ID().size(); i++) {
+			FieldNode field = new FieldNode(
+				context.ID(i).getText(),
+				(TypeNode) visit(context.type(i))
+			);
+			field.setLine(context.ID(i).getSymbol().getLine());
+			fieldList.add(field);
+		}
+
+		/*
+		 * Create the List of Class specific Method declaration by iterating and visiting
+		 * the list of MethdecContext
+		 */
+		List<MethodNode> methodList = new ArrayList<>();
+		for (MethdecContext method : context.methdec()) {
+			methodList.add((MethodNode) visit(method));
+		}
+
+		Node node = null;
+		// Check the existance of an ID for the Class
+		if (!context.ID().isEmpty()) {
+			node = new ClassNode(
+				context.ID(0).getText(),
+				fieldList,
+				methodList
+			);
+			node.setLine(context.CLASS().getSymbol().getLine());
+		}
+
+		return node;
+	}
+
+	@Override
+	public Node visitMethdec(MethdecContext context) {
+		if (print) {
+			printVarAndProdName(context);
+		}
+
+		/*
+		 * Create the List of Parameters by getting the i-th ID(Name of the argument)
+		 * and visiting its corresponding TypeNode
+		 */
+		List<ParNode> parList = new ArrayList<>();
+		for (int i = 1; i < context.ID().size(); i++) {
+			ParNode par = new ParNode(
+				context.ID(i).getText(),
+				(TypeNode) visit(context.type(i))
+			);
+			par.setLine(context.ID(i).getSymbol().getLine());
+			parList.add(par);
+		}
+
+    /*
+     * Create the List of In-Method declarations by iterating and visiting
+     * the list of DecContext
+     */
+    List<DecNode> decList = new ArrayList<>();
+		for (DecContext dec : context.dec())
+			decList.add((DecNode) visit(dec));
+
+		Node node = null;
+		// Check the existance of an ID for the Method
+		if (!context.ID().isEmpty()) {
+			node = new MethodNode(
+				context.ID(0).getText(),
+				(TypeNode) visit(context.type(0)),
+				parList,
+				decList,
+				visit(context.exp())
+			);
+			node.setLine(context.FUN().getSymbol().getLine());
+		}
+		return node;
 	}
 }
