@@ -440,4 +440,44 @@ public class AST {
 			return visitor.visitNode(this);
 		}
 	}
+
+	public static class ClassTypeNode extends TypeNode {
+		final List<TypeNode> allFields;
+		final List<TypeNode> allMethods;
+
+    public ClassTypeNode(List<TypeNode> allFields, List<TypeNode> allMethods) {
+      this.allFields = allFields;
+      this.allMethods = allMethods;
+    }
+
+    @Override
+		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {
+			return visitor.visitNode(this);
+		}
+	}
+
+	/**
+	 * Node to get the Type Reference for a Class
+	 */
+	public static class RefTypeNode extends TypeNode {
+		final String id; // The actual class name
+
+		public RefTypeNode(String id) {
+			this.id = id;
+		}
+
+		@Override
+		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {
+			return visitor.visitNode(this);
+		}
+	}
+
+	public static class EmptyTypeNode extends TypeNode {
+		public EmptyTypeNode() {}
+
+		@Override
+		public <S,E extends Exception> S accept(BaseASTVisitor<S,E> visitor) throws E {
+			return visitor.visitNode(this);
+		}
+	}
 }
