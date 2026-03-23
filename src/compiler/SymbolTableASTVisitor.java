@@ -1,6 +1,5 @@
 package compiler;
 
-import java.lang.reflect.Type;
 import java.util.*;
 import compiler.AST.*;
 import compiler.exc.*;
@@ -66,8 +65,8 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 		symTable.add(hmn);
 		int prevNLDecOffset=decOffset; // stores counter for offset of declarations at previous nesting level 
 		decOffset=-2;
-		
 		int parOffset=1;
+
 		for (ParNode par : n.parlist)
 			if (hmn.put(par.id, new STentry(nestingLevel,par.getType(),parOffset++)) != null) {
 				System.out.println("Par id " + par.id + " at line "+ n.getLine() +" already declared");
@@ -231,6 +230,8 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 		return null;
 	}
 
+	// ---------- Object Oriented Programming ----------
+
 	@Override
 	public Void visitNode(ClassNode classNode) {
 		if (this.print) {
@@ -238,7 +239,8 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 		}
 
 		// ---------- Symbol Table Class Insertion ----------
-		Map<String, STentry> map = this.symTable.get(this.nestingLevel);
+		//TODO: Forse aggiungere un controllo sul nesting level
+		Map<String, STentry> global = this.symTable.get(this.nestingLevel);
 		ClassTypeNode classType = new ClassTypeNode(
 			new ArrayList<>(),
 			new ArrayList<>()
@@ -246,19 +248,19 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 		STentry classEntry = new STentry(
 			this.nestingLevel,
 			classType,
-			this.decOffset-- // TODO = Controlla la correttezza dell'offset
+			this.decOffset--
 		);
 
-		if (map.put(classNode.className, classEntry) != null) {
+		if (global.put(classNode.className, classEntry) != null) {
 			System.out.println(
 				"Class ID " + classNode.className +
-					" at line " + classNode.getLine() +
-					" already declared"
+				" at line " + classNode.getLine() +
+				" already declared"
 			);
 			this.stErrors++;
 		}
 
-		// ---------- Class Table First Class Insertion ----------
+		// ---------- Class Table Class Insertion ----------
 		Map<String, STentry> virtualTable = new HashMap<>();
 		this.classTable.put(classNode.className, virtualTable);
 
@@ -266,44 +268,37 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 		this.nestingLevel++;
 		this.symTable.add(virtualTable);
 		//TODO: Controlla anche qui gli offset
-		int prevOffset = decOffset;
+		int prevOffset = this.decOffset;
+		this.decOffset = 0;
 		int fieldOffset = -1;
 
 		// Retrieve the Fields and Method Types
-		for (FieldNode fieldNode : classNode.fieldList) {
+		for (FieldNode fieldNode : classNode.fields) {
 			STentry fieldEntry = new STentry(
 				this.nestingLevel,
 				fieldNode.getType(),
-				fieldOffset
+				fieldOffset--
 			);
-			virtualTable.put(fieldNode.name, fieldEntry);
+			if (virtualTable.put(fieldNode.name, fieldEntry) != null) {
+				System.out.println(
+					"Field ID " + fieldNode.name +
+					" at line " + fieldNode.getLine() +
+					" already declared"
+				);
+			}
+
 			classType.allFields.add(fieldNode.getType());
-			fieldOffset--;
 		}
 
-		for (MethodNode methodNode : classNode.methodList) {
+		// TODO: Controlla caso in cui metodo chiama metodo
+		for (MethodNode methodNode : classNode.methods) {
 			// Visit the method  to add it to the ST, then add it to the virtual table
-			methodNode.accept(this);
-			STentry methodEntry = new STentry(
-				this.nestingLevel,
-				methodNode.getType(),
-				decOffset
-			);
+			this.visit(methodNode); //TODO: Prova accept
 			classType.allMethods.add(methodNode.getType());
 		}
-		/*
-		 NOTA: Perché ho visitato i metodi dopo averli aggiunti tutti alla table?
-		 Perché se:
-		 class A {
-    	 int x;
-    	 int f() { return g(); }
-    	 int g() { return x; }
-		 }
-		 Quando analizzi f, g non è ancora nella Symbol Table
-		*/
 
 		// Reset of the System Table, Nesting Level and Offset
-    this.symTable.remove(nestingLevel);
+    this.symTable.remove(this.nestingLevel);
 		this.nestingLevel--;
 		this.decOffset = prevOffset;
 		return null;
@@ -311,55 +306,154 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 
 	@Override
 	public Void visitNode(MethodNode methodNode) {
-		if (print) printNode(methodNode);
+		if (this.print) {
+			printNode(methodNode);
+		}
 
-		Map<String, STentry> currentScope = symTable.get(nestingLevel);
-
-		// 🔹 tipo funzionale
+		Map<String, STentry> currentScope = this.symTable.get(this.nestingLevel);
 		ArrowTypeNode methodType = new ArrowTypeNode(
-			methodNode.parlist.stream().map(ParNode::getType).toList(),
+			methodNode.parList.stream().map(ParNode::getType).toList(),
 			methodNode.retType
 		);
-
-		// 🔹 entry metodo
 		STentry entry = new STentry(
-			nestingLevel,
+			this.nestingLevel,
 			methodType,
-			decOffset++
+			this.decOffset--
 		);
 
-		currentScope.put(methodNode.id, entry);
+		// Insert into Symbol Table
+		if (currentScope.put(methodNode.name, entry) != null) {
+			System.out.println(
+				"Fun id " + methodNode.name +
+				" at line " + methodNode.getLine() +
+				" already declared"
+			);
+			this.stErrors++;
+		}
 
-		// 🔥 SALVO OFFSET DENTRO IL NODO
-		methodNode.offset = entry.offset;
-
-		// 🔹 nuovo scope metodo
-		symTable.add(new HashMap<>());
+		// Creating a new Map for the Symbol Table
 		nestingLevel++;
+		Map<String, STentry> map = new HashMap<>();
+		symTable.add(map);
+
+		// TODO: Verifica se necessario
+		// methodNode.offset = entry.offset;
 
 		int prevOffset = decOffset;
+		this.decOffset = -2;
 		int parOffset = 1;
 
-		// parametri
-		for (ParNode p : methodNode.parlist) {
-			symTable.get(nestingLevel).put(
-				p.id,
-				new STentry(nestingLevel, p.getType(), parOffset++)
+		// Visiting Method Parameters
+		for (ParNode par : methodNode.parList) {
+			STentry parEntry = new STentry(
+				this.nestingLevel,
+				par.getType(),
+				parOffset++
 			);
+			if (map.put(par.id, parEntry) != null) {
+				System.out.println(
+					"Par id " + par.id +
+					" at line " + methodNode.getLine() +
+					" already declared"
+				);
+				stErrors++;
+			}
 		}
 
-		// dichiarazioni locali
-		for (DecNode d : methodNode.declist) {
-			d.accept(this);
+		// Visit the local declarations
+		for (DecNode dec : methodNode.decList) {
+			this.visit(dec); //TODO: Prova con accept
 		}
 
-		// corpo
-		methodNode.body.accept(this);
+		// Visit the body of the method
+		this.visit(methodNode.exp); //TODO: Prova con accept
 
-		// uscita
-		symTable.remove(nestingLevel);
-		nestingLevel--;
-		decOffset = prevOffset;
+		// Reset of the System Table, Nesting Level and Offset
+		this.symTable.remove(this.nestingLevel);
+		this.nestingLevel--;
+		this.decOffset = prevOffset;
+		return null;
+	}
+
+	@Override
+	public Void visitNode(ClassCallNode classCallNode) {
+		if (this.print) {
+			printNode(classCallNode);
+		}
+
+		// ---------- Class Lookup ----------
+		STentry entry = this.stLookup(classCallNode.objId);
+
+		if (entry == null) {
+			System.out.println(
+				"Object ID " + classCallNode.objId +
+				" at line "+ classCallNode.getLine() +
+				" not declared"
+			);
+			this.stErrors++;
+		} else {
+			if (!(entry.type instanceof RefTypeNode)) {
+				System.out.println(
+					"Object ID " + classCallNode.objId +
+					" at line " + classCallNode.getLine() +
+					" is not an Object"
+				);
+				this.stErrors++;
+			} else {
+				classCallNode.objEntry = entry;
+			}
+		}
+
+		// ---------- Method Lookup ----------
+		entry = this.classTable
+			.get(classCallNode.objId)
+			.get(classCallNode.methodId);
+
+		if (entry == null) {
+			System.out.println(
+				"Method Call ID " + classCallNode.methodId +
+				" at line " + classCallNode.getLine() +
+				" not declared"
+			);
+			this.stErrors++;
+		} else {
+			classCallNode.methodEntry = entry;
+		}
+		classCallNode.nestingLevel = this.nestingLevel;
+		for (Node arg : classCallNode.argList) {
+			this.visit(arg);
+		}
+		return null;
+	}
+
+	@Override
+	public Void visitNode(NewNode newNode) {
+		if (this.print) {
+			printNode(newNode);
+		}
+
+		if (!this.classTable.containsKey(newNode.classId)) {
+			System.out.println(
+				"Class ID " + newNode.classId +
+				" at line " + newNode.getLine() +
+				" not declared"
+			);
+			this.stErrors++;
+		} else {
+			newNode.entry = this.symTable.getFirst().get(newNode.classId);
+		}
+
+		for (Node arg : newNode.argList) {
+			this.visit(arg);
+		}
+		return null;
+	}
+
+	@Override
+	public Void visitNode(EmptyNode emptyNode) {
+		if (this.print) {
+			printNode(emptyNode);
+		}
 
 		return null;
 	}

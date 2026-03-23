@@ -337,17 +337,17 @@ public class AST {
 	 */
 	public static class ClassNode extends DecNode {
 		final String className;
-		final List<FieldNode> fieldList;
-		final List<MethodNode> methodList;
+		final List<FieldNode> fields;
+		final List<MethodNode> methods;
 
 		ClassNode(
 			String className,
-			List<FieldNode> fieldList,
-			List<MethodNode> methodList
+			List<FieldNode> fields,
+			List<MethodNode> methods
 		) {
 			this.className = className;
-			this.fieldList = Collections.unmodifiableList(fieldList);
-			this.methodList = Collections.unmodifiableList(methodList);
+			this.fields = Collections.unmodifiableList(fields);
+			this.methods = Collections.unmodifiableList(methods);
 		}
 
 		//void setType(TypeNode t) {type = t;}
@@ -360,7 +360,6 @@ public class AST {
 
 	public static class FieldNode extends DecNode {
 		final String name;
-		final TypeNode type;
 
 		FieldNode(String name, TypeNode type) {
 			this.name = name;
@@ -379,6 +378,9 @@ public class AST {
 		final List<ParNode> parList;
 		final List<DecNode> decList;
 		final Node exp;
+		//TODO: Vedi se migliorabile
+		// int offset;
+		// String label;
 
 		MethodNode(
 			String name,
@@ -403,7 +405,10 @@ public class AST {
 	public static class ClassCallNode extends Node {
 		final String objId;      // nome oggetto
 		final String methodId;   // nome metodo
-		final List<Node> argList;
+		STentry objEntry;
+		STentry methodEntry;
+		int nestingLevel;
+		final List<Node> argList; // TODO: Controlla se serve
 
 		ClassCallNode(String objId, String methodId, List<Node> argList) {
 			this.objId = objId;
@@ -420,6 +425,7 @@ public class AST {
 	public static class NewNode extends Node {
 		final String classId;
 		final List<Node> argList;
+		STentry entry;
 
 		NewNode(String classId, List<Node> argList) {
 			this.classId = classId;
