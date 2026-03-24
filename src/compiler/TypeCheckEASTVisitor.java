@@ -3,6 +3,10 @@ package compiler;
 import compiler.AST.*;
 import compiler.exc.*;
 import compiler.lib.*;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import static compiler.TypeRels.*;
 
 //visitNode(n) fa il type checking di un Node n e ritorna:
@@ -126,12 +130,21 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 	}
 
 	@Override
-	public TypeNode visitNode(IdNode n) throws TypeException {
-		if (print) printNode(n,n.id);
-		TypeNode t = visit(n.entry); 
-		if (t instanceof ArrowTypeNode)
-			throw new TypeException("Wrong usage of function identifier " + n.id,n.getLine());
-		return t;
+	public TypeNode visitNode(IdNode node) throws TypeException {
+		if (this.print) {
+			this.printNode(node, node.id);
+		}
+		TypeNode type = this.visit(node.entry);
+		if (type instanceof ArrowTypeNode)
+			throw new TypeException(
+				"Wrong usage of function identifier " + node.id,
+				node.getLine()
+			);
+		if (type instanceof ClassTypeNode)
+			throw new TypeException(
+				"Wrong usage of class identifier " + node.id,
+				node.getLine());
+		return type;
 	}
 
 	@Override
@@ -269,5 +282,147 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 		)
 			throw new TypeException("Non Booleans in And",node.getLine());
 		return new BoolTypeNode();
+	}
+
+	@Override
+	public TypeNode visitNode(ClassNode node) throws TypeException {
+		if (this.print) {
+			this.printNode(node);
+		}
+
+		List<TypeNode> fields = new ArrayList<>();
+		for (FieldNode field : node.fields) {
+			fields.add(field.getType());
+		}
+
+		List<TypeNode> methods = new ArrayList<>();
+		for (MethodNode method : node.methods) {
+			try {
+				this.visit(method);
+				methods.add(method.getType());
+			} catch (IncomplException e) {
+			} catch (TypeException e) {
+				System.out.println(
+					"Type checking error in a declaration: " + e.text
+				);
+			}
+		}
+		return new ClassTypeNode(fields, methods);
+	}
+
+	@Override
+	public TypeNode visitNode(MethodNode node) throws TypeException {
+		if (this.print) {
+			printNode(node);
+		}
+
+		for (Node dec : node.decList) {
+			try {
+				this.visit(dec);
+			} catch (IncomplException e) {
+			} catch (TypeException e) {
+				System.out.println(
+					"Type checking error in a declaration: " + e.text
+				);
+			}
+		}
+
+		if (
+			!isSubtype(
+				this.visit(node.exp),
+				this.ckvisit(node.retType)
+			)
+		) {
+			throw new TypeException(
+				"Wrong return type for function " + node.name,
+				node.getLine()
+			);
+		}
+		return null;
+	}
+
+	@Override
+	public TypeNode visitNode(ClassCallNode node) throws TypeException {
+		if (this.print) {
+			this.printNode(node);
+		}
+
+		TypeNode type = this.visit(node.methodEntry);
+		if (!(type instanceof ArrowTypeNode)) {
+			throw new TypeException(
+				"Invocation of a non-function " + node.objId,
+				node.getLine());
+		}
+
+		ArrowTypeNode arrowType = (ArrowTypeNode) type;
+		if (!(arrowType.parlist.size() == node.argList.size())) {
+			throw new TypeException(
+				"Wrong number of parameters in the invocation of "
+					+ node.methodId,
+				node.getLine()
+			);
+		}
+
+		for (int i = 0; i < node.argList.size(); i++) {
+			if (!(isSubtype(
+				visit(node.argList.get(i)),
+				arrowType.parlist.get(i)
+			))) {
+				throw new TypeException(
+					"Wrong type for " +
+						(i + 1) +
+						"-th parameter in the invocation of " +
+						node.methodId,
+					node.getLine());
+			}
+		}
+		return arrowType.ret;
+	}
+
+	@Override
+	public TypeNode visitNode(NewNode node) throws TypeException {
+		if (this.print) {
+			this.printNode(node);
+		}
+
+		TypeNode type = this.visit(node.entry);
+		if (!(type instanceof ClassTypeNode)) {
+			throw new TypeException(
+				"Invocation of a non-class " + node.classId,
+				node.getLine());
+		}
+
+		ClassTypeNode classType = (ClassTypeNode) type;
+		if (!(classType.allFields.size() == node.argList.size())) {
+			throw new TypeException(
+				"Wrong number of parameters in the creation of an object of class "
+					+ node.classId,
+				node.getLine()
+			);
+		}
+
+		for (int i = 0; i < node.argList.size(); i++) {
+			if (!(isSubtype(
+				visit(node.argList.get(i)),
+				classType.allFields.get(i)
+			))) {
+				throw new TypeException(
+					"Wrong type for " +
+						(i + 1) +
+						"-th field in the creation of an object of class " +
+						node.classId,
+					node.getLine());
+			}
+		}
+		return new RefTypeNode(node.classId);
+	}
+
+	@Override
+	public TypeNode visitNode(EmptyNode node) throws TypeException {
+		if (this.print) {
+			this.printNode(node);
+		}
+
+		return new EmptyTypeNode();
 	}
 }

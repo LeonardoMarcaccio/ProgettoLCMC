@@ -198,4 +198,89 @@ public class PrintEASTVisitor extends BaseEASTVisitor<Void,VoidException> {
 		visit(node.right);
 		return null;
 	}
+
+	@Override
+	public Void visitNode(ClassNode node) {
+		printNode(node);
+		visit(node.getType());
+		for (FieldNode field : node.fields) {
+			visit(field);
+		}
+		for (MethodNode method : node.methods) {
+			visit(method);
+		}
+		return null;
+	}
+
+	@Override
+	public Void visitNode(FieldNode node) {
+		printNode(node);
+		visit(node.getType());
+		return null;
+	}
+
+	@Override
+	public Void visitNode(MethodNode node) {
+		printNode(node);
+		visit(node.getType());
+		for (Node par : node.parList) {
+			visit(par);
+		}
+		for (Node dec : node.decList) {
+			visit(dec);
+		}
+		visit(node.exp);
+		return null;
+	}
+
+	@Override
+	public Void visitNode(ClassCallNode node) {
+		printNode(node);
+		visitSTentry(node.objEntry);
+		visitSTentry(node.methodEntry);
+		for (Node arg : node.argList) {
+			visit(arg);
+		}
+		return null;
+	}
+
+	@Override
+	public Void visitNode(NewNode node) {
+		printNode(node);
+		visitSTentry(node.entry);
+		for (Node arg : node.argList) {
+			visit(arg);
+		}
+		return null;
+	}
+
+	@Override
+	public Void visitNode(EmptyNode node) {
+		printNode(node);
+		return null;
+	}
+
+	@Override
+	public Void visitNode(ClassTypeNode node) {
+		printNode(node);
+		for (Node field : node.allFields) {
+			visit(field);
+		}
+		for (Node method : node.allMethods) {
+			visit(method);
+		}
+		return null;
+	}
+
+	@Override
+	public Void visitNode(RefTypeNode node) {
+		printNode(node);
+		return null;
+	}
+
+	@Override
+	public Void visitNode(EmptyTypeNode node) {
+		printNode(node);
+		return null;
+	}
 }
