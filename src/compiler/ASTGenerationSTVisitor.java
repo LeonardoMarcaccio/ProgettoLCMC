@@ -50,10 +50,23 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
 
 	@Override
 	public Node visitLetInProg(LetInProgContext c) {
-		if (print) printVarAndProdName(c);
-		List<DecNode> declist = new ArrayList<>();
-		for (DecContext dec : c.dec()) declist.add((DecNode) visit(dec));
-		return new ProgLetInNode(declist, visit(c.exp()));
+		if (this.print) {
+			this.printVarAndProdName(c);
+		}
+		List<DecNode> decList = new ArrayList<>();
+		for (DecContext dec : c.dec()) {
+			decList.add((DecNode) this.visit(dec));
+		}
+		List<ClassNode> clDecList = new ArrayList<>();
+		for (CldecContext clDec : c.cldec()) {
+			clDecList.add((ClassNode) this.visit(clDec));
+		}
+
+		return new ProgLetInNode(
+			decList,
+			clDecList,
+			this.visit(c.exp())
+		);
 	}
 
 	@Override
@@ -286,8 +299,8 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
 
 	@Override
 	public Node visitMethdec(MethdecContext context) {
-		if (print) {
-			printVarAndProdName(context);
+		if (this.print) {
+			this.printVarAndProdName(context);
 		}
 
 		/*
@@ -329,9 +342,59 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
 
 	@Override
 	public Node visitIdType(IdTypeContext context) {
-		if (print) {
-			printVarAndProdName(context);
+		if (this.print) {
+			this.printVarAndProdName(context);
 		}
 		return new RefTypeNode(context.ID().getText());
+	}
+
+	@Override
+	public Node visitNull(NullContext context) {
+		if (this.print) {
+			this.printVarAndProdName(context);
+		}
+		EmptyNode node = new EmptyNode();
+		node.setLine(context.NULL().getSymbol().getLine());
+		return new EmptyNode();
+	}
+
+	@Override
+	public Node visitDotCall(DotCallContext context) {
+		if (this.print) {
+			this.printVarAndProdName(context);
+		}
+
+		List<Node> argList = new ArrayList<>();
+		for (ExpContext arg : context.exp()) {
+			argList.add(visit(arg));
+		}
+
+		ClassCallNode node = new ClassCallNode(
+			context.ID(0).getText(),
+			context.ID(1).getText(),
+			argList
+		);
+		node.setLine(context.ID(1).getSymbol().getLine());
+
+		return node;
+	}
+
+	@Override
+	public Node visitNew(NewContext context) {
+		if (this.print) {
+			this.printVarAndProdName(context);
+		}
+
+		List<Node> argList = new ArrayList<>();
+		for (ExpContext field : context.exp()) {
+			argList.add(visit(field));
+		}
+
+		NewNode node = new NewNode(
+			context.ID().getText(),
+			argList
+		);
+
+		return node;
 	}
 }

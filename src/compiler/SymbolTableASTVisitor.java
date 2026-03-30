@@ -26,12 +26,25 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 	}
 
 	@Override
-	public Void visitNode(ProgLetInNode n) {
-		if (print) printNode(n);
-		Map<String, STentry> hm = new HashMap<>();
-		symTable.add(hm);
-	    for (Node dec : n.declist) visit(dec);
-		visit(n.exp);
+	public Void visitNode(ProgLetInNode node) {
+		if (this.print) {
+			this.printNode(node);
+		}
+
+		Map<String, STentry> clDecHashMap = new HashMap<>();
+		this.symTable.add(clDecHashMap);
+		for (Node cl : node.clDecList) {
+			visit(cl);
+		}
+
+		Map<String, STentry> decHashMap = new HashMap<>();
+		this.symTable.add(decHashMap);
+		for (Node dec : node.decList) {
+			visit(dec);
+		}
+
+		visit(node.exp);
+		symTable.removeFirst();
 		symTable.removeFirst();
 		return null;
 	}
@@ -321,6 +334,9 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 			this.decOffset--
 		);
 
+		//TODO: TEST
+		methodNode.offset = this.decOffset;
+
 		// Insert into Symbol Table
 		if (currentScope.put(methodNode.name, entry) != null) {
 			System.out.println(
@@ -400,7 +416,7 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 				);
 				this.stErrors++;
 			} else {
-				classCallNode.objEntry = entry;
+				classCallNode.entry = entry;
 			}
 		}
 
@@ -453,6 +469,28 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 	public Void visitNode(EmptyNode emptyNode) {
 		if (this.print) {
 			printNode(emptyNode);
+		}
+
+		return null;
+	}
+
+	@Override
+	public Void visitNode(RefTypeNode refTypeNode) {
+		if (this.print) {
+			this.printNode(refTypeNode);
+		}
+
+		STentry entry = this.stLookup(refTypeNode.id);
+		if (entry == null) {
+			System.out.println(
+				"Class Id " + refTypeNode.id +
+				" at line " + refTypeNode.getLine() +
+				" not declared"
+			);
+			stErrors++;
+		} else {
+			refTypeNode.entry = entry;
+			//refTypeNode.nl = nestingLevel;
 		}
 
 		return null;

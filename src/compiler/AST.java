@@ -13,11 +13,16 @@ public class AST {
 	 * Program with Declarations Node
 	 */
 	public static class ProgLetInNode extends Node {
-		final List<DecNode> declist;
+		final List<DecNode> decList;
+		final List<ClassNode> clDecList; //TODO: Controlla se necessario
 		final Node exp;
-		ProgLetInNode(List<DecNode> d, Node e) {
-			declist = Collections.unmodifiableList(d); 
-			exp = e;
+		ProgLetInNode(
+			List<DecNode> decList,
+			List<ClassNode> clDecList ,
+			Node exp) {
+			this.decList = Collections.unmodifiableList(decList);
+			this.clDecList = Collections.unmodifiableList(clDecList);
+			this.exp = exp;
 		}
 
 		@Override
@@ -378,9 +383,8 @@ public class AST {
 		final List<ParNode> parList;
 		final List<DecNode> decList;
 		final Node exp;
-		//TODO: Vedi se migliorabile
-		// int offset;
-		// String label;
+		String label;
+		int offset;
 
 		MethodNode(
 			String name,
@@ -405,12 +409,16 @@ public class AST {
 	public static class ClassCallNode extends Node {
 		final String objId;      // nome oggetto
 		final String methodId;   // nome metodo
-		STentry objEntry;
+		STentry entry;
 		STentry methodEntry;
 		int nestingLevel;
 		final List<Node> argList; // TODO: Controlla se serve
 
-		ClassCallNode(String objId, String methodId, List<Node> argList) {
+		ClassCallNode(
+			String objId,
+			String methodId,
+			List<Node> argList
+		) {
 			this.objId = objId;
 			this.methodId = methodId;
 			this.argList = Collections.unmodifiableList(argList);
@@ -467,6 +475,7 @@ public class AST {
 	 */
 	public static class RefTypeNode extends TypeNode {
 		final String id; // The actual class name
+		STentry entry;
 
 		public RefTypeNode(String id) {
 			this.id = id;

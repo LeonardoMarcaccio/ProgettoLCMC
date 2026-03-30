@@ -29,7 +29,7 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 	@Override
 	public TypeNode visitNode(ProgLetInNode n) throws TypeException {
 		if (print) printNode(n);
-		for (Node dec : n.declist)
+		for (Node dec : n.decList)
 			try {
 				visit(dec);
 			} catch (IncomplException e) { 
@@ -424,5 +424,24 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode,TypeException
 		}
 
 		return new EmptyTypeNode();
+	}
+
+	@Override
+	public TypeNode visitNode(RefTypeNode node) throws TypeException {
+		if (this.print) {
+			this.printNode(node);
+		}
+
+		TypeNode type = this.visit(node.entry);
+		if (type instanceof ArrowTypeNode)
+			throw new TypeException(
+				"Wrong usage of function identifier " + node.id,
+				node.getLine()
+			);
+		if (type instanceof IntTypeNode)
+			throw new TypeException(
+				"Wrong usage of variable identifier " + node.id,
+				node.getLine());
+		return type;
 	}
 }
