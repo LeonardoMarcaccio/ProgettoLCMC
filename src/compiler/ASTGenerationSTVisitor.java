@@ -266,9 +266,12 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
 		 */
 		List<FieldNode> fieldList = new ArrayList<>();
 		for (int i = 1; i < context.ID().size(); i++) {
+			Node contextTypeI = visit(context.type(i - 1));
+			TypeNode test = (TypeNode) contextTypeI;
+			String nodeName = context.ID(i).getText();
 			FieldNode field = new FieldNode(
-				context.ID(i).getText(),
-				(TypeNode) visit(context.type(i))
+				nodeName,
+				test
 			);
 			field.setLine(context.ID(i).getSymbol().getLine());
 			fieldList.add(field);
@@ -345,6 +348,7 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
 		if (this.print) {
 			this.printVarAndProdName(context);
 		}
+
 		return new RefTypeNode(context.ID().getText());
 	}
 
