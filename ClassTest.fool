@@ -1,0 +1,8 @@
+let
+
+  class Pippo (f:int) {
+    fun first:int() f;
+  }
+
+  var pippo:Pippo = new Pippo(1);
+in print(pippo.first());

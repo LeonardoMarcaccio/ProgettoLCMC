@@ -14,14 +14,11 @@ public class AST {
 	 */
 	public static class ProgLetInNode extends Node {
 		final List<DecNode> decList;
-		final List<ClassNode> clDecList; //TODO: Controlla se necessario
 		final Node exp;
 		ProgLetInNode(
 			List<DecNode> decList,
-			List<ClassNode> clDecList ,
 			Node exp) {
 			this.decList = Collections.unmodifiableList(decList);
-			this.clDecList = Collections.unmodifiableList(clDecList);
 			this.exp = exp;
 		}
 
@@ -475,7 +472,6 @@ public class AST {
 	 */
 	public static class RefTypeNode extends TypeNode {
 		final String id; // The actual class name
-		STentry entry;
 
 		public RefTypeNode(String id) {
 			this.id = id;

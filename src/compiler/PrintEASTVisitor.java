@@ -199,6 +199,8 @@ public class PrintEASTVisitor extends BaseEASTVisitor<Void,VoidException> {
 		return null;
 	}
 
+	// ---------- Object Oriented Programming ----------
+
 	@Override
 	public Void visitNode(ClassNode node) {
 		printNode(node);

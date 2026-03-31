@@ -54,17 +54,15 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
 			this.printVarAndProdName(c);
 		}
 		List<DecNode> decList = new ArrayList<>();
+		for (CldecContext clDec : c.cldec()) {
+			decList.add((ClassNode) this.visit(clDec));
+		}
 		for (DecContext dec : c.dec()) {
 			decList.add((DecNode) this.visit(dec));
-		}
-		List<ClassNode> clDecList = new ArrayList<>();
-		for (CldecContext clDec : c.cldec()) {
-			clDecList.add((ClassNode) this.visit(clDec));
 		}
 
 		return new ProgLetInNode(
 			decList,
-			clDecList,
 			this.visit(c.exp())
 		);
 	}
@@ -265,13 +263,15 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
 		 * and visiting its corresponding TypeNode
 		 */
 		List<FieldNode> fieldList = new ArrayList<>();
+		int typeOffset = 1; //TODO: To be modified in case of extension
 		for (int i = 1; i < context.ID().size(); i++) {
-			Node contextTypeI = visit(context.type(i - 1));
-			TypeNode test = (TypeNode) contextTypeI;
 			String nodeName = context.ID(i).getText();
+			TypeNode nodeType = (TypeNode) visit(
+				context.type(i - typeOffset)
+			);
 			FieldNode field = new FieldNode(
 				nodeName,
-				test
+				nodeType
 			);
 			field.setLine(context.ID(i).getSymbol().getLine());
 			fieldList.add(field);
@@ -348,6 +348,8 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
 		if (this.print) {
 			this.printVarAndProdName(context);
 		}
+
+		//context.
 
 		return new RefTypeNode(context.ID().getText());
 	}
