@@ -142,10 +142,12 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 
 	@Override
 	public Void visitNode(IfNode n) {
-		if (print) printNode(n);
-		visit(n.cond);
-		visit(n.th);
-		visit(n.el);
+		if (this.print) {
+			printNode(n);
+		}
+		this.visit(n.cond);
+		this.visit(n.th);
+		this.visit(n.el);
 		return null;
 	}
 	
@@ -272,9 +274,9 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 	// ---------- Object Oriented Programming ----------
 
 	@Override
-	public Void visitNode(ClassNode classNode) {
+	public Void visitNode(ClassNode node) {
 		if (this.print) {
-			printNode(classNode);
+			printNode(node);
 		}
 
 		// ---------- Symbol Table Class Insertion ----------
@@ -290,10 +292,10 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 			this.decOffset--
 		);
 
-		if (global.put(classNode.className, classEntry) != null) {
+		if (global.put(node.className, classEntry) != null) {
 			System.out.println(
-				"Class ID " + classNode.className +
-				" at line " + classNode.getLine() +
+				"Class ID " + node.className +
+				" at line " + node.getLine() +
 				" already declared"
 			);
 			this.stErrors++;
@@ -301,9 +303,9 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 
 		// ---------- Class Table Class Insertion ----------
 		Map<String, STentry> virtualTable = new HashMap<>();
-		this.classTable.put(classNode.className, virtualTable);
+		this.classTable.put(node.className, virtualTable);
 
-		// ---------- Entering Class Declaration ----------
+		// ---------- Entering Class Scope ----------
 		this.nestingLevel++;
 		this.symTable.add(virtualTable);
 		//TODO: Controlla anche qui gli offset
@@ -312,12 +314,15 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 		int fieldOffset = -1;
 
 		// Retrieve the Fields and Method Types
-		for (FieldNode fieldNode : classNode.fields) {
+		for (FieldNode fieldNode : node.fields) {
 			STentry fieldEntry = new STentry(
 				this.nestingLevel,
 				fieldNode.getType(),
 				fieldOffset--
 			);
+
+			fieldNode.offset = fieldEntry.offset;
+
 			if (virtualTable.put(fieldNode.name, fieldEntry) != null) {
 				System.out.println(
 					"Field ID " + fieldNode.name +
@@ -330,8 +335,8 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 		}
 
 		// TODO: Controlla caso in cui metodo chiama metodo
-		for (MethodNode methodNode : classNode.methods) {
-			// Visit the method  to add it to the ST, then add it to the virtual table
+		for (MethodNode methodNode : node.methods) {
+			// Visit a method, adding it to the ST and the Virtual Table
 			this.visit(methodNode); //TODO: Prova accept
 			classType.allMethods.add(methodNode.getType());
 		}
@@ -357,11 +362,8 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 		STentry entry = new STentry(
 			this.nestingLevel,
 			methodType,
-			this.decOffset--
+			this.decOffset++
 		);
-
-		//TODO: TEST
-		methodNode.offset = this.decOffset;
 
 		// Insert into Symbol Table
 		if (currentScope.put(methodNode.name, entry) != null) {
@@ -373,13 +375,12 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 			this.stErrors++;
 		}
 
+		methodNode.offset = entry.offset;
+
 		// Creating a new Map for the Symbol Table
 		nestingLevel++;
 		Map<String, STentry> map = new HashMap<>();
 		symTable.add(map);
-
-		// TODO: Verifica se necessario
-		// methodNode.offset = entry.offset;
 
 		int prevOffset = decOffset;
 		this.decOffset = -2;

@@ -362,6 +362,7 @@ public class AST {
 
 	public static class FieldNode extends DecNode {
 		final String name;
+		int offset;
 
 		FieldNode(String name, TypeNode type) {
 			this.name = name;

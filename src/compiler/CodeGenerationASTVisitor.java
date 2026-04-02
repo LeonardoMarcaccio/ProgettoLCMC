@@ -322,17 +322,24 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 
 		List<String> dispatchTable = new ArrayList<>();
 		for (MethodNode method : node.methods) {
-			if (!dispatchTable.get(method.offset).isEmpty()) {
-				throw new IllegalStateException("Fra sono esplosi gli offset");
-			}
 			visit(method);
-			dispatchTable.add(method.offset, method.label);
+			if (method.offset < dispatchTable.size()) {
+				dispatchTable.set(method.offset, method.label); // overriding
+			} else {
+				//NOTA: Se non è un override, aggiungi in coda fino all'offset desiderato
+//				while (dispatchTable.size() < method.offset) dispatchTable.add(null);
+				dispatchTable.add(method.label); // nuovo metodo
+			}
+			// TODO : Check if necessary
+//			if (!dispatchTable.get(method.offset).isEmpty()) {
+//				throw new IllegalStateException("Fra sono esplosi gli offset");
+//			}
 		}
 
 		String code = "lhp";
 
 		for (String label : dispatchTable) {
-			nlJoin(
+			code = nlJoin(
 				code,
 				"push " + label,
 				"lhp",
@@ -434,6 +441,7 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 			"stm", // set $tm to popped value (with the aim of duplicating top of stack)
 			"ltm", // load Access Link (pointer to frame of function "id" declaration)
 			"ltm", // duplicate top of stack
+			"lw",
 			"push " + node.methodEntry.offset,
 			"add", // compute address of "id" declaration
 			"lw", // load address of "id" function
@@ -444,7 +452,7 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 	@Override
 	public String visitNode(NewNode node) {
 		if (this.print) {
-			printNode(node);
+			this.printNode(node);
 		}
 
 		String code = null;
@@ -471,6 +479,7 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 		code = nlJoin(
 			code,
 			"push " + offset,
+			"lw",
 			"lhp",
 			"sw",
 			"lhp",
