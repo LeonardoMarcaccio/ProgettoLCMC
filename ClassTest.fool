@@ -2,7 +2,12 @@ let
 
   class Pippo (f:int) {
     fun first:int() f;
+    fun second:int() first();
+  }
+
+  class Poppi (f:Pippo) {
+    fun poppi:int() f.second();
   }
 
   var pippo:Pippo = new Pippo(1);
-in print(pippo.first());
+in print(pippo.second());

@@ -333,8 +333,7 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 
 			classType.allFields.add(fieldNode.getType());
 		}
-
-		// TODO: Controlla caso in cui metodo chiama metodo
+		
 		for (MethodNode methodNode : node.methods) {
 			// Visit a method, adding it to the ST and the Virtual Table
 			this.visit(methodNode); //TODO: Prova accept
