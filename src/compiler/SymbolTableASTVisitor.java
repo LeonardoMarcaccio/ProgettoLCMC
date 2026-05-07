@@ -15,13 +15,18 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 	int stErrors=0;
 
 	SymbolTableASTVisitor() {}
-	SymbolTableASTVisitor(boolean debug) {super(debug);} // enables print for debugging
+	SymbolTableASTVisitor(boolean debug) { // enables print for debugging
+		super(debug);
+	}
 
 	private STentry stLookup(String id) {
-		int j = nestingLevel;
+		int j = this.nestingLevel;
 		STentry entry = null;
-		while (j >= 0 && entry == null) 
-			entry = symTable.get(j--).get(id);
+
+		while (j >= 0 && entry == null) {
+			entry = this.symTable.get(j--).get(id);
+		}
+
 		return entry;
 	}
 
@@ -34,18 +39,23 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 		Map<String, STentry> decHashMap = new HashMap<>();
 		this.symTable.add(decHashMap);
 		for (Node dec : node.decList) {
-			visit(dec);
+			this.visit(dec);
 		}
 
-		visit(node.exp);
-		symTable.removeFirst();
+		this.visit(node.exp);
+		this.symTable.removeFirst();
+
 		return null;
 	}
 
 	@Override
-	public Void visitNode(ProgNode n) {
-		if (print) printNode(n);
-		visit(n.exp);
+	public Void visitNode(ProgNode node) {
+		if (this.print) {
+			this.printNode(node);
+		}
+
+		this.visit(node.exp);
+
 		return null;
 	}
 	
@@ -56,8 +66,8 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 		}
 
 		Map<String, STentry> currentNestingLevel = this.symTable.get(this.nestingLevel);
-		List<TypeNode> parTypes = new ArrayList<>();  
-		for (ParNode par : node.parlist) {
+		List<TypeNode> parTypes = new ArrayList<>();
+		for (ParNode par : node.parList) {
 			parTypes.add(par.getType());
 		}
 
@@ -87,7 +97,7 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 		this.decOffset = -2;
 		int parOffset = 1;
 
-		for (ParNode par : node.parlist) {
+		for (ParNode par : node.parList) {
 			if (
 				newNestingLevel.put(
 					par.id,
@@ -106,7 +116,7 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 		}
 
 		// Visiting the inner function declaration
-		for (Node dec : node.declist) {
+		for (Node dec : node.decList) {
 			this.visit(dec);
 		}
 
@@ -114,160 +124,251 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 		this.visit(node.exp);
 
 		//rimuovere la hashmap corrente poiche' esco dallo scope
-		symTable.remove(nestingLevel--);
-		decOffset=prevNLDecOffset;
+		this.symTable.remove(this.nestingLevel--);
+		this.decOffset = prevNLDecOffset;
 		return null;
 	}
 	
 	@Override
-	public Void visitNode(VarNode n) {
-		if (print) printNode(n);
-		visit(n.exp);
-		Map<String, STentry> hm = symTable.get(nestingLevel);
-		STentry entry = new STentry(nestingLevel,n.getType(),decOffset--);
-		//inserimento di ID nella symtable
-		if (hm.put(n.id, entry) != null) {
-			System.out.println("Var id " + n.id + " at line "+ n.getLine() +" already declared");
-			stErrors++;
-		}
-		return null;
-	}
-
-	@Override
-	public Void visitNode(PrintNode n) {
-		if (print) printNode(n);
-		visit(n.exp);
-		return null;
-	}
-
-	@Override
-	public Void visitNode(IfNode n) {
+	public Void visitNode(VarNode node) {
 		if (this.print) {
-			printNode(n);
+			this.printNode(node);
 		}
-		this.visit(n.cond);
-		this.visit(n.th);
-		this.visit(n.el);
-		return null;
-	}
-	
-	@Override
-	public Void visitNode(EqualNode n) {
-		if (print) printNode(n);
-		visit(n.left);
-		visit(n.right);
-		return null;
-	}
-	
-	@Override
-	public Void visitNode(TimesNode n) {
-		if (print) printNode(n);
-		visit(n.left);
-		visit(n.right);
-		return null;
-	}
-	
-	@Override
-	public Void visitNode(PlusNode n) {
-		if (print) printNode(n);
-		visit(n.left);
-		visit(n.right);
+
+		this.visit(node.exp);
+		Map<String, STentry> hm = this.symTable.get(this.nestingLevel);
+		STentry entry = new STentry(
+			this.nestingLevel,
+			node.getType(),
+			this.decOffset--
+		);
+
+		//inserimento di ID nella symtable
+		if (hm.put(node.id, entry) != null) {
+			System.out.println(
+				"Var id " + node.id +
+				" at line " + node.getLine() +
+				" already declared"
+			);
+			this.stErrors++;
+		}
+
 		return null;
 	}
 
 	@Override
-	public Void visitNode(CallNode n) {
-		if (print) printNode(n);
-		STentry entry = stLookup(n.id);
+	public Void visitNode(PrintNode node) {
+		if (this.print) {
+			this.printNode(node);
+		}
+
+		this.visit(node.exp);
+
+		return null;
+	}
+
+	@Override
+	public Void visitNode(IfNode node) {
+		if (this.print) {
+			this.printNode(node);
+		}
+
+		this.visit(node.cond);
+		this.visit(node.thenExp);
+		this.visit(node.elseExp);
+
+		return null;
+	}
+	
+	@Override
+	public Void visitNode(EqualNode node) {
+		if (this.print) {
+			this.printNode(node);
+		}
+
+		this.visit(node.left);
+		this.visit(node.right);
+
+		return null;
+	}
+	
+	@Override
+	public Void visitNode(TimesNode node) {
+		if (this.print) {
+			this.printNode(node);
+		}
+
+		this.visit(node.left);
+		this.visit(node.right);
+
+		return null;
+	}
+	
+	@Override
+	public Void visitNode(PlusNode node) {
+		if (this.print) {
+			this.printNode(node);
+		}
+
+		this.visit(node.left);
+		this.visit(node.right);
+
+		return null;
+	}
+
+	@Override
+	public Void visitNode(CallNode node) {
+		if (this.print) {
+			this.printNode(node);
+		}
+
+		STentry entry = this.stLookup(node.id);
+
 		if (entry == null) {
-			System.out.println("Fun id " + n.id + " at line "+ n.getLine() + " not declared");
-			stErrors++;
+			System.out.println(
+				"Fun id " + node.id +
+				" at line " + node.getLine() +
+				" not declared"
+			);
+			this.stErrors++;
 		} else {
-			n.entry = entry;
-			n.nl = nestingLevel;
+			node.entry = entry;
+			node.nestingLevel = this.nestingLevel;
 		}
-		for (Node arg : n.arglist) visit(arg);
+
+		for (Node arg : node.argList) {
+			this.visit(arg);
+		}
+
 		return null;
 	}
 
 	@Override
-	public Void visitNode(IdNode n) {
-		if (print) printNode(n);
-		STentry entry = stLookup(n.id);
+	public Void visitNode(IdNode node) {
+		if (this.print) {
+			this.printNode(node);
+		}
+
+		STentry entry = this.stLookup(node.id);
 		if (entry == null) {
-			System.out.println("Var or Par id " + n.id + " at line "+ n.getLine() + " not declared");
-			stErrors++;
+			System.out.println(
+				"Var or Par id " + node.id +
+				" at line " + node.getLine() +
+				" not declared"
+			);
+			this.stErrors++;
 		} else {
-			n.entry = entry;
-			n.nl = nestingLevel;
+			node.entry = entry;
+			node.nestingLevel = this.nestingLevel;
 		}
+
 		return null;
 	}
 
 	@Override
-	public Void visitNode(BoolNode n) {
-		if (print) printNode(n, n.val.toString());
+	public Void visitNode(BoolNode node) {
+		if (this.print) {
+			this.printNode(
+				node,
+				node.val.toString()
+			);
+		}
+
 		return null;
 	}
 
 	@Override
-	public Void visitNode(IntNode n) {
-		if (print) printNode(n, n.val.toString());
+	public Void visitNode(IntNode node) {
+		if (this.print) {
+			this.printNode(
+				node,
+				node.val.toString()
+			);
+		}
+
 		return null;
 	}
 
 	@Override
-	public Void visitNode(GreaterEqualNode greaterEqualNode) {
-		if (print) printNode(greaterEqualNode);
-		visit(greaterEqualNode.left);
-		visit(greaterEqualNode.right);
+	public Void visitNode(GreaterEqualNode node) {
+		if (this.print) {
+			this.printNode(node);
+		}
+
+		this.visit(node.left);
+		this.visit(node.right);
+
 		return null;
 	}
 
 	@Override
-	public Void visitNode(LessEqualNode lessEqualNode) {
-		if (print) printNode(lessEqualNode);
-		visit(lessEqualNode.left);
-		visit(lessEqualNode.right);
+	public Void visitNode(LessEqualNode node) {
+		if (this.print) {
+			this.printNode(node);
+		}
+
+		this.visit(node.left);
+		this.visit(node.right);
+
 		return null;
 	}
 
 	@Override
-	public Void visitNode(NotNode notNode) {
-		if (print) printNode(notNode);
-		visit(notNode.expression);
+	public Void visitNode(NotNode node) {
+		if (this.print) {
+			this.printNode(node);
+		}
+
+		this.visit(node.expression);
+
 		return null;
 	}
 
 	@Override
-	public Void visitNode(MinusNode minusNode) {
-		if (print) printNode(minusNode);
-		visit(minusNode.left);
-		visit(minusNode.right);
+	public Void visitNode(MinusNode node) {
+		if (this.print) {
+			this.printNode(node);
+		}
+
+		this.visit(node.left);
+		this.visit(node.right);
+
 		return null;
 	}
 
 	@Override
-	public Void visitNode(OrNode orNode) {
-		if (print) printNode(orNode);
-		visit(orNode.left);
-		visit(orNode.right);
+	public Void visitNode(OrNode node) {
+		if (this.print) {
+			this.printNode(node);
+		}
+
+		this.visit(node.left);
+		this.visit(node.right);
+
 		return null;
 	}
 
 	@Override
-	public Void visitNode(DivNode dovNode) {
-		if (print) printNode(dovNode);
-		visit(dovNode.left);
-		visit(dovNode.right);
+	public Void visitNode(DivNode node) {
+		if (this.print) {
+			this.printNode(node);
+		}
+
+		this.visit(node.left);
+		this.visit(node.right);
+
 		return null;
 	}
 
 	@Override
-	public Void visitNode(AndNode andNode) {
-		if (print) printNode(andNode);
-		visit(andNode.left);
-		visit(andNode.right);
+	public Void visitNode(AndNode node) {
+		if (this.print) {
+			this.printNode(node);
+		}
+
+		this.visit(node.left);
+		this.visit(node.right);
+
 		return null;
 	}
 
@@ -276,11 +377,10 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 	@Override
 	public Void visitNode(ClassNode node) {
 		if (this.print) {
-			printNode(node);
+			this.printNode(node);
 		}
 
 		// ---------- Symbol Table Class Insertion ----------
-		//TODO: Forse aggiungere un controllo sul nesting level
 		Map<String, STentry> global = this.symTable.get(this.nestingLevel);
 		ClassTypeNode classType = new ClassTypeNode(
 			new ArrayList<>(),
@@ -308,7 +408,6 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 		// ---------- Entering Class Scope ----------
 		this.nestingLevel++;
 		this.symTable.add(virtualTable);
-		//TODO: Controlla anche qui gli offset
 		int prevOffset = this.decOffset;
 		this.decOffset = 0;
 		int fieldOffset = -1;
@@ -333,10 +432,10 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 
 			classType.allFields.add(fieldNode.getType());
 		}
-		
+
+		// Visit a method and adding it to the ST and the Virtual Table
 		for (MethodNode methodNode : node.methods) {
-			// Visit a method, adding it to the ST and the Virtual Table
-			this.visit(methodNode); //TODO: Prova accept
+			this.visit(methodNode);
 			classType.allMethods.add(methodNode.getType());
 		}
 
@@ -377,11 +476,11 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 		methodNode.offset = entry.offset;
 
 		// Creating a new Map for the Symbol Table
-		nestingLevel++;
+		this.nestingLevel++;
 		Map<String, STentry> map = new HashMap<>();
-		symTable.add(map);
+		this.symTable.add(map);
 
-		int prevOffset = decOffset;
+		int prevOffset = this.decOffset;
 		this.decOffset = -2;
 		int parOffset = 1;
 
@@ -398,7 +497,7 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 					" at line " + methodNode.getLine() +
 					" already declared"
 				);
-				stErrors++;
+				this.stErrors++;
 			}
 		}
 
@@ -420,7 +519,7 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 	@Override
 	public Void visitNode(ClassCallNode classCallNode) {
 		if (this.print) {
-			printNode(classCallNode);
+			this.printNode(classCallNode);
 		}
 
 		// ---------- Class Lookup ----------
@@ -473,7 +572,7 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 	@Override
 	public Void visitNode(NewNode newNode) {
 		if (this.print) {
-			printNode(newNode);
+			this.printNode(newNode);
 		}
 
 		if (!this.classTable.containsKey(newNode.classId)) {
@@ -496,7 +595,7 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 	@Override
 	public Void visitNode(EmptyNode emptyNode) {
 		if (this.print) {
-			printNode(emptyNode);
+			this.printNode(emptyNode);
 		}
 
 		return null;

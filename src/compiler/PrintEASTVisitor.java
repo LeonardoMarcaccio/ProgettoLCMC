@@ -9,193 +9,215 @@ public class PrintEASTVisitor extends BaseEASTVisitor<Void,VoidException> {
 	PrintEASTVisitor() { super(false,true); } 
 
 	@Override
-	public Void visitNode(ProgLetInNode n) {
-		printNode(n);
-		for (Node dec : n.decList) visit(dec);
-		visit(n.exp);
+	public Void visitNode(ProgLetInNode node) {
+		this.printNode(node);
+		for (Node dec : node.decList) {
+			this.visit(dec);
+		}
+		this.visit(node.exp);
 		return null;
 	}
 
 	@Override
-	public Void visitNode(ProgNode n) {
-		printNode(n);
-		visit(n.exp);
+	public Void visitNode(ProgNode node) {
+		this.printNode(node);
+		this.visit(node.exp);
 		return null;
 	}
 
 	@Override
-	public Void visitNode(FunNode n) {
-		printNode(n,n.id);
-		visit(n.retType);
-		for (ParNode par : n.parlist) visit(par);
-		for (Node dec : n.declist) visit(dec);
-		visit(n.exp);
+	public Void visitNode(FunNode node) {
+		this.printNode(node,node.id);
+		this.visit(node.retType);
+		for (ParNode par : node.parList) {
+			this.visit(par);
+		}
+		for (Node dec : node.decList) {
+			this.visit(dec);
+		}
+		this.visit(node.exp);
 		return null;
 	}
 
 	@Override
-	public Void visitNode(ParNode n) {
-		printNode(n,n.id);
-		visit(n.getType());
+	public Void visitNode(ParNode node) {
+		this.printNode(node,node.id);
+		this.visit(node.getType());
 		return null;
 	}
 
 	@Override
-	public Void visitNode(VarNode n) {
-		printNode(n,n.id);
-		visit(n.getType());
-		visit(n.exp);
+	public Void visitNode(VarNode node) {
+		this.printNode(node,node.id);
+		this.visit(node.getType());
+		this.visit(node.exp);
 		return null;
 	}
 
 	@Override
-	public Void visitNode(PrintNode n) {
-		printNode(n);
-		visit(n.exp);
+	public Void visitNode(PrintNode node) {
+		this.printNode(node);
+		this.visit(node.exp);
 		return null;
 	}
 
 	@Override
-	public Void visitNode(IfNode n) {
-		printNode(n);
-		visit(n.cond);
-		visit(n.th);
-		visit(n.el);
+	public Void visitNode(IfNode node) {
+		this.printNode(node);
+		this.visit(node.cond);
+		this.visit(node.thenExp);
+		this.visit(node.elseExp);
 		return null;
 	}
 
 	@Override
-	public Void visitNode(EqualNode n) {
-		printNode(n);
-		visit(n.left);
-		visit(n.right);
+	public Void visitNode(EqualNode node) {
+		this.printNode(node);
+		this.visit(node.left);
+		this.visit(node.right);
 		return null;
 	}
 
 	@Override
-	public Void visitNode(TimesNode n) {
-		printNode(n);
-		visit(n.left);
-		visit(n.right);
+	public Void visitNode(TimesNode node) {
+		this.printNode(node);
+		this.visit(node.left);
+		this.visit(node.right);
 		return null;
 	}
 
 	@Override
-	public Void visitNode(PlusNode n) {
-		printNode(n);
-		visit(n.left);
-		visit(n.right);
+	public Void visitNode(PlusNode node) {
+		this.printNode(node);
+		this.visit(node.left);
+		this.visit(node.right);
 		return null;
 	}
 
 	@Override
-	public Void visitNode(CallNode n) {
-		printNode(n,n.id+" at nestinglevel "+n.nl); 
-		visit(n.entry);
-		for (Node arg : n.arglist) visit(arg);
+	public Void visitNode(CallNode node) {
+		this.printNode(
+			node,
+			node.id + " at nestinglevel " + node.nestingLevel
+		);
+		this.visit(node.entry);
+		for (Node arg : node.argList) {
+			this.visit(arg);
+		}
 		return null;
 	}
 
 	@Override
-	public Void visitNode(IdNode n) {
-		printNode(n,n.id+" at nestinglevel "+n.nl); 
-		visit(n.entry);
+	public Void visitNode(IdNode node) {
+		this.printNode(
+			node,
+			node.id + " at nestinglevel " + node.nestingLevel
+		);
+		this.visit(node.entry);
 		return null;
 	}
 
 	@Override
-	public Void visitNode(BoolNode n) {
-		printNode(n,n.val.toString());
+	public Void visitNode(BoolNode node) {
+		this.printNode(
+			node,
+			node.val.toString()
+		);
 		return null;
 	}
 
 	@Override
-	public Void visitNode(IntNode n) {
-		printNode(n,n.val.toString());
+	public Void visitNode(IntNode node) {
+		this.printNode(
+			node,
+			node.val.toString()
+		);
 		return null;
 	}
 	
 	@Override
-	public Void visitNode(ArrowTypeNode n) {
-		printNode(n);
-		for (Node par: n.parlist) visit(par);
-		visit(n.ret,"->"); //marks return type
+	public Void visitNode(ArrowTypeNode node) {
+		this.printNode(node);
+		for (Node par: node.parList) {
+			this.visit(par);
+		}
+		this.visit(node.returnType,"->"); //marks return type
 		return null;
 	}
 
 	@Override
-	public Void visitNode(BoolTypeNode n) {
-		printNode(n);
+	public Void visitNode(BoolTypeNode node) {
+		this.printNode(node);
 		return null;
 	}
 
 	@Override
-	public Void visitNode(IntTypeNode n) {
-		printNode(n);
+	public Void visitNode(IntTypeNode node) {
+		this.printNode(node);
 		return null;
 	}
 	
 	@Override
 	public Void visitSTentry(STentry entry) {
-		printSTentry("nestlev "+entry.nl);
-		printSTentry("type");
-		visit(entry.type);
-		printSTentry("offset "+entry.offset);
+		this.printSTentry("nestlev " + entry.nl);
+		this.printSTentry("type");
+		this.visit(entry.type);
+		this.printSTentry("offset " + entry.offset);
 		return null;
 	}
 
 	@Override
 	public Void visitNode(GreaterEqualNode node) {
-		printNode(node);
-		visit(node.left);
-		visit(node.right);
+		this.printNode(node);
+		this.visit(node.left);
+		this.visit(node.right);
 		return null;
 	}
 
 	@Override
 	public Void visitNode(LessEqualNode node) {
-		printNode(node);
-		visit(node.left);
-		visit(node.right);
+		this.printNode(node);
+		this.visit(node.left);
+		this.visit(node.right);
 		return null;
 	}
 
 	@Override
 	public Void visitNode(NotNode node) {
-		printNode(node);
-		visit(node.expression);
+		this.printNode(node);
+		this.visit(node.expression);
 		return null;
 	}
 
 	@Override
 	public Void visitNode(MinusNode node) {
-		printNode(node);
-		visit(node.left);
-		visit(node.right);
+		this.printNode(node);
+		this.visit(node.left);
+		this.visit(node.right);
 		return null;
 	}
 
 	@Override
 	public Void visitNode(OrNode node) {
-		printNode(node);
-		visit(node.left);
-		visit(node.right);
+		this.printNode(node);
+		this.visit(node.left);
+		this.visit(node.right);
 		return null;
 	}
 
 	@Override
 	public Void visitNode(DivNode node) {
-		printNode(node);
-		visit(node.left);
-		visit(node.right);
+		this.printNode(node);
+		this.visit(node.left);
+		this.visit(node.right);
 		return null;
 	}
 
 	@Override
 	public Void visitNode(AndNode node) {
-		printNode(node);
-		visit(node.left);
-		visit(node.right);
+		this.printNode(node);
+		this.visit(node.left);
+		this.visit(node.right);
 		return null;
 	}
 
@@ -203,86 +225,86 @@ public class PrintEASTVisitor extends BaseEASTVisitor<Void,VoidException> {
 
 	@Override
 	public Void visitNode(ClassNode node) {
-		printNode(node);
-		visit(node.getType());
+		this.printNode(node);
+		this.visit(node.getType());
 		for (FieldNode field : node.fields) {
-			visit(field);
+			this.visit(field);
 		}
 		for (MethodNode method : node.methods) {
-			visit(method);
+			this.visit(method);
 		}
 		return null;
 	}
 
 	@Override
 	public Void visitNode(FieldNode node) {
-		printNode(node);
-		visit(node.getType());
+		this.printNode(node);
+		this.visit(node.getType());
 		return null;
 	}
 
 	@Override
 	public Void visitNode(MethodNode node) {
-		printNode(node);
-		visit(node.getType());
+		this.printNode(node);
+		this.visit(node.getType());
 		for (Node par : node.parList) {
-			visit(par);
+			this.visit(par);
 		}
 		for (Node dec : node.decList) {
-			visit(dec);
+			this.visit(dec);
 		}
-		visit(node.exp);
+		this.visit(node.exp);
 		return null;
 	}
 
 	@Override
 	public Void visitNode(ClassCallNode node) {
-		printNode(node);
-		visitSTentry(node.entry);
-		visitSTentry(node.methodEntry);
+		this.printNode(node);
+		this.visitSTentry(node.entry);
+		this.visitSTentry(node.methodEntry);
 		for (Node arg : node.argList) {
-			visit(arg);
+			this.visit(arg);
 		}
 		return null;
 	}
 
 	@Override
 	public Void visitNode(NewNode node) {
-		printNode(node);
-		visitSTentry(node.entry);
+		this.printNode(node);
+		this.visitSTentry(node.entry);
 		for (Node arg : node.argList) {
-			visit(arg);
+			this.visit(arg);
 		}
 		return null;
 	}
 
 	@Override
 	public Void visitNode(EmptyNode node) {
-		printNode(node);
+		this.printNode(node);
 		return null;
 	}
 
 	@Override
 	public Void visitNode(ClassTypeNode node) {
-		printNode(node);
+		this.printNode(node);
 		for (Node field : node.allFields) {
-			visit(field);
+			this.visit(field);
 		}
 		for (Node method : node.allMethods) {
-			visit(method);
+			this.visit(method);
 		}
 		return null;
 	}
 
 	@Override
 	public Void visitNode(RefTypeNode node) {
-		printNode(node);
+		this.printNode(node);
 		return null;
 	}
 
 	@Override
 	public Void visitNode(EmptyTypeNode node) {
-		printNode(node);
+		this.printNode(node);
 		return null;
 	}
 }

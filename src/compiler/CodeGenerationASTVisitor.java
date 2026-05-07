@@ -42,11 +42,11 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 	public String visitNode(FunNode n) {
 		if (print) printNode(n,n.id);
 		String declCode = null, popDecl = null, popParl = null;
-		for (Node dec : n.declist) {
+		for (Node dec : n.decList) {
 			declCode = nlJoin(declCode,visit(dec));
 			popDecl = nlJoin(popDecl,"pop");
 		}
-		for (int i=0;i<n.parlist.size();i++) popParl = nlJoin(popParl,"pop");
+		for (int i = 0; i<n.parList.size(); i++) popParl = nlJoin(popParl,"pop");
 		String funl = freshFunLabel();
 		putCode(
 			nlJoin(
@@ -95,10 +95,10 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 			visit(n.cond),
 			"push 1",
 			"beq "+l1,
-			visit(n.el),
+			visit(n.elseExp),
 			"b "+l2,
 			l1+":",
-			visit(n.th),
+			visit(n.thenExp),
 			l2+":"
 		);
 	}
@@ -146,10 +146,10 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 	public String visitNode(CallNode n) {
 		if (print) printNode(n,n.id);
 		String argCode = null, getAR = null;
-		for (int i=n.arglist.size()-1;i>=0;i--) {
-			argCode = nlJoin(argCode, visit(n.arglist.get(i)));
+		for (int i=n.argList.size()-1;i>=0;i--) {
+			argCode = nlJoin(argCode, visit(n.argList.get(i)));
 		}
-		for (int i = 0;i<n.nl-n.entry.nl;i++) {
+		for (int i = 0;i<n.nestingLevel-n.entry.nl;i++) {
 			getAR = nlJoin(getAR, "lw");
 		}
 
@@ -185,7 +185,7 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 	public String visitNode(IdNode n) {
 		if (print) printNode(n,n.id);
 		String getAR = null;
-		for (int i = 0;i<n.nl-n.entry.nl;i++) getAR=nlJoin(getAR,"lw");
+		for (int i = 0; i<n.nestingLevel -n.entry.nl; i++) getAR=nlJoin(getAR,"lw");
 		return nlJoin(
 			"lfp", getAR, // retrieve address of frame containing "id" declaration
 			              // by following the static chain (of Access Links)
@@ -342,17 +342,7 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 		List<String> dispatchTable = new ArrayList<>();
 		for (MethodNode method : node.methods) {
 			visit(method);
-			if (method.offset < dispatchTable.size()) {
-				dispatchTable.set(method.offset, method.label); // overriding
-			} else {
-				//NOTA: Se non è un override, aggiungi in coda fino all'offset desiderato
-//				while (dispatchTable.size() < method.offset) dispatchTable.add(null);
-				dispatchTable.add(method.label); // nuovo metodo
-			}
-			// TODO : Check if necessary
-//			if (!dispatchTable.get(method.offset).isEmpty()) {
-//				throw new IllegalStateException("Fra sono esplosi gli offset");
-//			}
+			dispatchTable.add(method.label); // nuovo metodo
 		}
 
 		String code = "lhp";
