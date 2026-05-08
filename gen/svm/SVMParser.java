@@ -248,7 +248,7 @@ public class SVMParser extends Parser {
 				match(PUSH);
 				setState(17);
 				((InstructionContext)_localctx).l = match(LABEL);
-				code[i++] = PUSH; 
+				code[i++] = PUSH;
 					    		             labelRef.put(i++,(((InstructionContext)_localctx).l!=null?((InstructionContext)_localctx).l.getText():null));
 				}
 				break;

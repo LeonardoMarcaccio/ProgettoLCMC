@@ -17,7 +17,8 @@ public class AST {
 		final Node exp;
 		ProgLetInNode(
 			List<DecNode> decList,
-			Node exp) {
+			Node exp
+		) {
 			this.decList = Collections.unmodifiableList(decList);
 			this.exp = exp;
 		}
@@ -35,7 +36,9 @@ public class AST {
 	 */
 	public static class ProgNode extends Node {
 		final Node exp;
-		ProgNode(Node e) {exp = e;}
+		ProgNode(Node e) {
+			exp = e;
+		}
 
 		@Override
 		public <S,E extends Exception> S accept(
@@ -60,7 +63,8 @@ public class AST {
 			TypeNode retType,
 			List<ParNode> parList,
 			List<DecNode> decList,
-			Node exp) {
+			Node exp
+		) {
 			this.id = id;
 			this.retType = retType;
 			this.parList = parList;
@@ -246,6 +250,8 @@ public class AST {
 	 */
 	public static class IdNode extends Node {
 		final String id;
+		//Pointer to the specific Symbol Table Entry, used during Binding,
+		//Type Checking and contains information for Code Generation
 		STentry entry;
 		int nestingLevel;
 
@@ -535,11 +541,11 @@ public class AST {
 	 * Class Method Node
 	 */
 	public static class MethodNode extends DecNode {
-		final String name;
+		final String name; //Name given by the programmer (i.e. getName() etc..)
 		final TypeNode retType;
 		final List<ParNode> parList;
 		final List<DecNode> decList;
-		final Node exp;
+		final Node exp; //Unique Name given during code generation for the assembly
 		String label;
 		int offset;
 
@@ -572,7 +578,7 @@ public class AST {
 		final String objId;
 		final String methodId;
 		final List<Node> argList;
-		STentry entry;
+		STentry entry; //Entry of the class of which you are calling the method
 		STentry methodEntry;
 		int nestingLevel;
 

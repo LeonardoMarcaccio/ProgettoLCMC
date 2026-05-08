@@ -5,11 +5,13 @@ import compiler.AST.*;
 import compiler.exc.*;
 import compiler.lib.*;
 
+/**
+ * The objective is to create and update the Symbol Table and its entries
+ */
 public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 
-	// TODO: Segnati questa cosa negli appunti
-	private List<Map<String, STentry>> symTable = new ArrayList<>();
-	private Map<String, Map<String, STentry>> classTable = new HashMap<>();
+	private List<Map<String, STentry>> symTable = new ArrayList<>(); // Each element of the list is a scope of the program
+	private Map<String, Map<String, STentry>> classTable = new HashMap<>(); // A Symbol Table used for the classes
 	private int nestingLevel=0; // current nesting level
 	private int decOffset=-2; // counter for offset of local declarations at current nesting level 
 	int stErrors=0;
@@ -65,19 +67,23 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 			this.printNode(node);
 		}
 
+		// Retrieving the current Scope
 		Map<String, STentry> currentNestingLevel = this.symTable.get(this.nestingLevel);
+
+		// Retrieving the Function Argument Types
 		List<TypeNode> parTypes = new ArrayList<>();
 		for (ParNode par : node.parList) {
 			parTypes.add(par.getType());
 		}
 
+		// Creating the Entry for the Function
 		STentry entry = new STentry(
 			this.nestingLevel,
 			new ArrowTypeNode(parTypes, node.retType),
 			this.decOffset--
 		);
 
-		//inserimento di ID nella symtable
+		// Check if the ID is already in the symbol table
 		if (currentNestingLevel.put(node.id, entry) != null) {
 			System.out.println(
 				"Fun id " + node.id +
@@ -87,7 +93,7 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 			this.stErrors++;
 		}
 
-		//creare una nuova hashmap per la symTable
+		// Entering a Function creates a new scope
 		this.nestingLevel++;
 		Map<String, STentry> newNestingLevel = new HashMap<>();
 		this.symTable.add(newNestingLevel);
@@ -123,7 +129,7 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 		// Visiting the Main Function Body
 		this.visit(node.exp);
 
-		//rimuovere la hashmap corrente poiche' esco dallo scope
+		// Delete the function scope after exit, due to it being useless after
 		this.symTable.remove(this.nestingLevel--);
 		this.decOffset = prevNLDecOffset;
 		return null;
@@ -503,11 +509,11 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void,VoidException> {
 
 		// Visit the local declarations
 		for (DecNode dec : methodNode.decList) {
-			this.visit(dec); //TODO: Prova con accept
+			this.visit(dec);
 		}
 
 		// Visit the body of the method
-		this.visit(methodNode.exp); //TODO: Prova con accept
+		this.visit(methodNode.exp);
 
 		// Reset of the System Table, Nesting Level and Offset
 		this.symTable.remove(this.nestingLevel);

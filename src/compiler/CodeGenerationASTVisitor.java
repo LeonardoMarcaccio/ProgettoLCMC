@@ -42,11 +42,17 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 	public String visitNode(FunNode n) {
 		if (print) printNode(n,n.id);
 		String declCode = null, popDecl = null, popParl = null;
+
+		// Generate the necessary code to allocate space on the stack and initializing local variables
 		for (Node dec : n.decList) {
 			declCode = nlJoin(declCode,visit(dec));
 			popDecl = nlJoin(popDecl,"pop");
 		}
+		// Generate the necessary code to pop all the Parameters,
+		// no need to add them to the stack because the caller already did
 		for (int i = 0; i<n.parList.size(); i++) popParl = nlJoin(popParl,"pop");
+
+		// Creates a new Function Label
 		String funl = freshFunLabel();
 		putCode(
 			nlJoin(
@@ -60,7 +66,7 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 				"sra", // set $ra to popped value
 				"pop", // remove Access Link from stack
 				popParl, // remove parameters from stack
-				"sfp", // set $fp to popped value (Control Link)
+				"sfp", // set $fp to popped value (Control Link, aka the value of the frame pointer of the caller)
 				"ltm", // load $tm value (function result)
 				"lra", // load $ra value
 				"js"  // jump to popped address
@@ -146,14 +152,18 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 	public String visitNode(CallNode n) {
 		if (print) printNode(n,n.id);
 		String argCode = null, getAR = null;
-		for (int i=n.argList.size()-1;i>=0;i--) {
+
+		// Parameter Code Generation, is done upside down for easier accessibility
+		for (int i=n.argList.size()-1; i>=0; i--) {
 			argCode = nlJoin(argCode, visit(n.argList.get(i)));
 		}
+
+		// Static Chain Retrieving
 		for (int i = 0;i<n.nestingLevel-n.entry.nl;i++) {
 			getAR = nlJoin(getAR, "lw");
 		}
 
-		return n.entry.offset < 0 ? nlJoin(
+		String code = nlJoin(
 			"lfp", // load Control Link (pointer to frame of function "id" caller)
 			argCode, // generate code for argument expressions in reversed order
 			"lfp",
@@ -161,20 +171,16 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 			// by following the static chain (of Access Links)
 			"stm", // set $tm to popped value (with the aim of duplicating top of stack)
 			"ltm", // load Access Link (pointer to frame of function "id" declaration)
-			"ltm", // duplicate top of stack
-			"push "+n.entry.offset, "add", // compute address of "id" declaration
-			"lw", // load address of "id" function
-			"js"  // jump to popped address (saving address of subsequent instruction in $ra)
-		) : nlJoin(
-			"lfp", // load Control Link (pointer to frame of function "id" caller)
-			argCode, // generate code for argument expressions in reversed order
-			"lfp",
-			getAR, // retrieve address of frame containing "id" declaration
-			// by following the static chain (of Access Links)
-			"stm", // set $tm to popped value (with the aim of duplicating top of stack)
-			"ltm", // load Access Link (pointer to frame of function "id" declaration)
-			"ltm", // duplicate top of stack
-			"lw",
+			"ltm" // duplicate top of stack
+		);
+
+		// In case we are dealing with methods we need to use the Object Pointer to access the Dispatch Table
+		if (n.entry.offset >= 0) {
+			code = nlJoin(code, "lw");
+		}
+
+		return nlJoin(
+			code,
 			"push "+n.entry.offset, "add", // compute address of "id" declaration
 			"lw", // load address of "id" function
 			"js"  // jump to popped address (saving address of subsequent instruction in $ra)
@@ -339,20 +345,24 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 			this.printNode(node);
 		}
 
+		// Dispatch Table creation
 		List<String> dispatchTable = new ArrayList<>();
 		for (MethodNode method : node.methods) {
-			visit(method);
-			dispatchTable.add(method.label); // nuovo metodo
+			visit(method); // Generates the code for the method
+			dispatchTable.add(method.label);
 		}
 
+		// Pushing the Heap Pointer
 		String code = "lhp";
 
+		// For each method in the Class, I put it in the heap
 		for (String label : dispatchTable) {
 			code = nlJoin(
 				code,
-				"push " + label,
-				"lhp",
-				"sw",
+				"push " + label, 	// Puts the address of the method on the stack
+				"lhp",						// Load the current heap address
+				"sw",							// Store the METHOD ADDRESS to the given HEAP ADDRESS
+				// Cycle that increments the HEAP POINTER
 				"lhp",
 				"push 1",
 				"add",
@@ -360,7 +370,10 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 			);
 		}
 
-		return code; //NOTA : Stato finale della DT è "$hs"
+		return code;
+
+		// At the end of the execution on top of the stack there will be the next free slot in the heap
+		// and after it there will be the original HEAP POINTER of the class (Dispatch Table Pointer)
 	}
 
 	@Override
@@ -409,7 +422,7 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 		if (this.print) {
 			printNode(node);
 		}
-		return nlJoin("push -1"); //TODO: Check if it is necessary
+		return nlJoin("push -1");
 	}
 
 	@Override
@@ -418,6 +431,7 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 			printNode(node);
 		}
 
+		// Parameter Code Generation, is done upside down for easier accessibility
 		String argCode = null;
 		for (
 			int i = node.argList.size() - 1;
@@ -429,6 +443,7 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 				visit(node.argList.get(i)));
 		}
 
+		// Static Chain Retrieving
 		String getActivationRecord = null;
 		for (
 			int i = 0;
@@ -441,16 +456,16 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 		return nlJoin(
 			"lfp", // load Control Link (pointer to frame of function "id" caller)
 			argCode, // generate code for argument expressions in reversed order
-			"lfp",
+			"lfp", // Enabler for the retrieving cycle
 			getActivationRecord, // retrieve address of frame containing "id" declaration
 			// by following the static chain (of Access Links)
 			"push " + node.entry.offset,
 			"add",
-			"lw",
+			"lw", // Gain access to the memory section containing the OBJECT POINTER
 			"stm", // set $tm to popped value (with the aim of duplicating top of stack)
 			"ltm", // load Access Link (pointer to frame of function "id" declaration)
 			"ltm", // duplicate top of stack
-			"lw",
+			"lw", // Loads the dispatch table
 			"push " + node.methodEntry.offset,
 			"add", // compute address of "id" declaration
 			"lw", // load address of "id" function
@@ -466,10 +481,12 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 
 		String code = null;
 
+		// Generates the code for the Constructor parameters
 		for (Node arg : node.argList) {
 			code = nlJoin(code, visit(arg));
 		}
 
+		// Copy them into the Heap
 		for (Node arg : node.argList) {
 			code = nlJoin(
 				code,
@@ -482,16 +499,17 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 			);
 		}
 
+		// Retrieves the DISPATCH TABLE address
 		int offset = node.entry.offset + ExecuteVM.MEMSIZE;
 
-		//NOTE: Carico il puntatore alla Dispatch Table corretta
 		code = nlJoin(
 			code,
 			"push " + offset,
-			"lw",
-			"lhp",
-			"sw",
-			"lhp",
+			"lw",		// Load the DISPATCH TABLE pointer
+			"lhp",	// Load the Heap pointer
+			"sw",		// Store in the heap the current DISPATCH TABLE pointer
+			"lhp",	// Load the pointer to the stack
+			// Increment the HEAP pointer
 			"lhp",
 			"push 1",
 			"add",
